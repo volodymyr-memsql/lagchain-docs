@@ -3,22 +3,22 @@ title: "SingleStore integrations"
 description: "Integrate with SingleStore using LangChain Python."
 ---
 
-[SingleStore](https://singlestore.com/) is a high-performance, distributed SQL database designed to excel in both [cloud](https://www.singlestore.com/cloud/) and on-premises environments. It offers a versatile feature set, seamless deployment options, and exceptional performance.
+[SingleStore](https://singlestore.com/) is a high-performance, distributed SQL database designed for both [cloud](https://www.singlestore.com/cloud/) and on-premises environments.
 
-This integration provides the following components to leverage SingleStore's capabilities:
+The `langchain-singlestore` package provides the following components:
 
+- **`SingleStoreVectorStore`**: Store document embeddings and perform vector, full-text, and hybrid searches with multiple search strategies and scoring modes.
 - **`SingleStoreLoader`**: Load documents directly from a SingleStore database table.
-- **`SingleStoreSemanticCache`**: Use SingleStore as a semantic cache for efficient storage and retrieval of embeddings.
+- **`SingleStoreSemanticCache`**: Use SingleStore as a semantic cache for LLM responses using vector similarity.
 - **`SingleStoreChatMessageHistory`**: Store and retrieve chat message history in SingleStore.
-- **`SingleStoreVectorStore`**: Store document embeddings and perform fast vector and full-text searches.
-
-These components enable efficient document storage, embedding management, and advanced search capabilities, combining full-text and vector-based search for fast and accurate queries.
+- **`SingleStoreSQLDatabaseRetriever`**: Execute SQL queries against SingleStore and retrieve results as documents.
 
 ```python
 from langchain_singlestore import (
     SingleStoreChatMessageHistory,
     SingleStoreLoader,
     SingleStoreSemanticCache,
+    SingleStoreSQLDatabaseRetriever,
     SingleStoreVectorStore,
 )
 ```

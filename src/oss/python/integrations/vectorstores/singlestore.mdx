@@ -3,37 +3,25 @@ title: "SingleStoreVectorStore integration"
 description: "Integrate with the SingleStoreVectorStore using LangChain Python."
 ---
 
->[SingleStore](https://singlestore.com/) is a robust, high-performance distributed SQL database solution designed to excel in both [cloud](https://www.singlestore.com/cloud/) and on-premises environments. Boasting a versatile feature set, it offers seamless deployment options while delivering unparalleled performance.
+[SingleStore](https://singlestore.com/) is a high-performance distributed SQL database designed for both [cloud](https://www.singlestore.com/cloud/) and on-premises environments. It provides advanced vector storage and operations with built-in vector functions like [dot_product](https://docs.singlestore.com/managed-service/en/reference/sql-reference/vector-functions/dot_product.html) and [euclidean_distance](https://docs.singlestore.com/managed-service/en/reference/sql-reference/vector-functions/euclidean_distance.html), combined with [full-text indexing based on Lucene](https://docs.singlestore.com/cloud/developer-resources/functional-extensions/working-with-full-text-search/) for hybrid search capabilities.
 
-A standout feature of SingleStore is its advanced support for vector storage and operations, making it an ideal choice for applications requiring intricate AI capabilities such as text similarity matching. With built-in vector functions like [dot_product](https://docs.singlestore.com/managed-service/en/reference/sql-reference/vector-functions/dot_product.html) and [euclidean_distance](https://docs.singlestore.com/managed-service/en/reference/sql-reference/vector-functions/euclidean_distance.html), SingleStore empowers developers to implement sophisticated algorithms efficiently.
-
-For developers keen on leveraging vector data within SingleStore, a comprehensive tutorial is available, guiding them through the intricacies of [working with vector data](https://docs.singlestore.com/managed-service/en/developer-resources/functional-extensions/working-with-vector-data.html). This tutorial delves into the Vector Store within SingleStoreDB, showcasing its ability to facilitate searches based on vector similarity. Leveraging vector indexes, queries can be executed with remarkable speed, enabling swift retrieval of relevant data.
-
-Moreover, SingleStore's Vector Store seamlessly integrates with [full-text indexing based on Lucene](https://docs.singlestore.com/cloud/developer-resources/functional-extensions/working-with-full-text-search/), enabling powerful text similarity searches. Users can filter search results based on selected fields of document metadata objects, enhancing query precision.
-
-What sets SingleStore apart is its ability to combine vector and full-text searches in various ways, offering flexibility and versatility. Whether prefiltering by text or vector similarity and selecting the most relevant data, or employing a weighted sum approach to compute a final similarity score, developers have multiple options at their disposal.
-
-In essence, SingleStore provides a comprehensive solution for managing and querying vector data, offering unparalleled performance and flexibility for AI-driven applications.
+`SingleStoreVectorStore` supports multiple search strategies, advanced metadata filtering, pre-computed embeddings, configurable full-text index versions (V1, V2) with different scoring algorithms (MATCH, BM25, BM25_GLOBAL), and both vector and text-based indexing.
 
 | Class | Package | JS support |
 | :--- | :--- |  :---: |
 | `SingleStoreVectorStore` | `langchain_singlestore` | ✅ |
 
-<Note>
-**For the langchain-community version `SingleStoreDB` (deprecated), see**
-
-the [v0.2 documentation](https://python.langchain.com/v0.2/docs/integrations/vectorstores/singlestoredb/).
-
-</Note>
-
 ## Setup
 
-To access SingleStore vector stores you'll need to install the `langchain-singlestore` integration package.
-pip install -qU "langchain-singlestore"
+Install the `langchain-singlestore` integration package:
+
+```bash
+pip install -qU langchain-singlestore
+```
 
 ## Initialization
 
-To initialize `SingleStoreVectorStore`, you need an @[`Embeddings`] object and connection parameters for the SingleStore database.
+To initialize `SingleStoreVectorStore`, provide an @[`Embeddings`] object and connection parameters for the SingleStore database.
 
 ### Required parameters
 
@@ -41,7 +29,7 @@ To initialize `SingleStoreVectorStore`, you need an @[`Embeddings`] object and c
 
 ### Optional parameters
 
-- **distance_strategy** (`DistanceStrategy`): Strategy for calculating vector distances. Defaults to `DOT_PRODUCT`. Options:
+- **metric** (`str`): Strategy for calculating vector distances. Defaults to `DOT_PRODUCT`. Options:
   - `DOT_PRODUCT`: Computes the scalar product of two vectors.
   - `EUCLIDEAN_DISTANCE`: Computes the Euclidean distance between two vectors.
 
@@ -57,6 +45,7 @@ To initialize `SingleStoreVectorStore`, you need an @[`Embeddings`] object and c
 - **vector_size** (`int`): Size of the vector. Required if `use_vector_index` is `True`.
 
 - **use_full_text_search** (`bool`): Enables full-text indexing on content. Defaults to `False`.
+- **full_text_index_version** (`FullTextIndexVersion`): Version of the full-text index. Defaults to `V1`. See [Full-text index versions](#full-text-index-versions).
 
 ### Connection pool parameters
 
@@ -66,110 +55,101 @@ To initialize `SingleStoreVectorStore`, you need an @[`Embeddings`] object and c
 
 ### Database connection parameters
 
-- **host** (`str`): Hostname, IP, or URL for the database.
+All SingleStore components accept connection parameters supported by the underlying [`singlestoredb` Python driver](https://singlestoredb-python.labs.singlestore.com/generated/singlestoredb.connect.html):
+
+- **host** (`str`): Hostname, IP address, or URL for the database. Supports the URL format `[scheme://][user:password@]host[:port]/db_name`.
 - **user** (`str`): Database username.
 - **password** (`str`): Database password.
-- **port** (`int`): Database port. Defaults to `3306`.
+- **port** (`int`): Database port. Defaults to `3306` for non-HTTP connections, `80` for HTTP, and `443` for HTTPS.
 - **database** (`str`): Database name.
 
-### Additional options
+### Additional driver options
 
-- **pure_python** (`bool`): Enables pure Python mode.
-- **local_infile** (`bool`): Allows local file uploads.
+- **pure_python** (`bool`): Use the connector in pure Python mode.
+- **local_infile** (`bool`): Allow local file uploads.
 - **charset** (`str`): Character set for string values.
-- **ssl_key**, **ssl_cert**, **ssl_ca** (`str`): Paths to SSL files.
-- **ssl_disabled** (`bool`): Disables SSL.
-- **ssl_verify_cert** (`bool`): Verifies server's certificate.
-- **ssl_verify_identity** (`bool`): Verifies server's identity.
-- **autocommit** (`bool`): Enables autocommits.
-- **results_type** (`str`): Structure of query results (e.g., `tuples`, `dicts`).
+- **ssl_key**, **ssl_cert**, **ssl_ca** (`str`): Paths to SSL key, certificate, and CA files.
+- **ssl_cipher** (`str`): Sets the SSL cipher list.
+- **ssl_disabled** (`bool`): Disable SSL usage.
+- **ssl_verify_cert** (`bool`): Verify the server's certificate. Automatically enabled if `ssl_ca` is specified.
+- **ssl_verify_identity** (`bool`): Verify the server's identity.
+- **credential_type** (`str`): Type of authentication to use: `PASSWORD`, `JWT`, or `BROWSER_SSO`.
+- **autocommit** (`bool`): Enable autocommits.
+- **results_type** (`str`): Structure of query results (e.g., `tuples`, `namedtuples`, `dicts`).
+- **connect_timeout** (`int`): Timeout for connecting to the database in seconds. Defaults to `10`.
+- **nan_as_null** (`bool`): Treat NaN values as NULLs in parameter substitutions.
+- **inf_as_null** (`bool`): Treat Inf values as NULLs in parameter substitutions.
+- **enable_extended_data_types** (`bool`): Enable extended data types (BSON, vector).
+- **vector_data_format** (`str`): Format for vector types: `json` or `binary`.
+- **program_name** (`str`): Name of the program for telemetry.
+- **conn_attrs** (`dict`): Additional connection attributes for telemetry.
+
+For a complete list of supported parameters, see the [`singlestoredb.connect` API reference](https://singlestoredb-python.labs.singlestore.com/generated/singlestoredb.connect.html).
+
+### Environment variables
+
+Connection parameters and credentials can be provided through environment variables instead of passing them directly. The `singlestoredb` driver recognizes the following variables:
+
+| Environment variable | Description |
+| :--- | :--- |
+| `SINGLESTOREDB_URL` | Connection URL in the format `user:password@host:port/db_name` |
+| `SINGLESTOREDB_HOST` | Database hostname or IP address |
+| `SINGLESTOREDB_PORT` | Database port number |
+| `SINGLESTOREDB_USER` | Database username |
+| `SINGLESTOREDB_PASSWORD` | Database password |
+| `SINGLESTOREDB_DATABASE` | Database name |
+| `SINGLESTOREDB_PURE_PYTHON` | Use pure Python mode |
 
 ```python
 import os
 
-from langchain_singlestore.vectorstores import SingleStoreVectorStore
+os.environ["SINGLESTOREDB_URL"] = "user:password@host:3306/db_name"
 
-os.environ["SINGLESTOREDB_URL"] = "root:pass@localhost:3306/db"
+# No host parameter needed when using the environment variable
+vector_store = SingleStoreVectorStore(
+    embedding=OpenAIEmbeddings(),
+    table_name="documents",
+)
+```
 
-vector_store = SingleStoreVectorStore(embeddings=embeddings)
+```python
+from langchain_openai import OpenAIEmbeddings
+from langchain_singlestore import SingleStoreVectorStore
+
+vector_store = SingleStoreVectorStore(
+    embedding=OpenAIEmbeddings(),
+    host="127.0.0.1:3306/db",
+    table_name="documents",
+    metric="EUCLIDEAN_DISTANCE",  # or "DOT_PRODUCT"
+)
 ```
 
 ## Manage vector store
 
-The `SingleStoreVectorStore` assumes that a Document's ID is an integer. Below are examples of how to manage the vector store.
-
 ### Add items to vector store
-
-You can add documents to the vector store as follows:
-
-```python
-pip install -qU langchain-core
-```
 
 ```python
 from langchain_core.documents import Document
 
-docs = [
+documents = [
     Document(
-        page_content="""In the parched desert, a sudden rainstorm brought relief,
-            as the droplets danced upon the thirsty earth, rejuvenating the landscape
-            with the sweet scent of petrichor.""",
-        metadata={"category": "rain"},
+        page_content="The Eiffel Tower is an iconic landmark in Paris.",
+        metadata={"category": "landmark", "country": "France", "year_built": 1889},
     ),
     Document(
-        page_content="""Amidst the bustling cityscape, the rain fell relentlessly,
-            creating a symphony of pitter-patter on the pavement, while umbrellas
-            bloomed like colorful flowers in a sea of gray.""",
-        metadata={"category": "rain"},
+        page_content="The Louvre is the world's largest art museum.",
+        metadata={"category": "museum", "country": "France", "year_built": 1793},
     ),
     Document(
-        page_content="""High in the mountains, the rain transformed into a delicate
-            mist, enveloping the peaks in a mystical veil, where each droplet seemed to
-            whisper secrets to the ancient rocks below.""",
-        metadata={"category": "rain"},
-    ),
-    Document(
-        page_content="""Blanketing the countryside in a soft, pristine layer, the
-            snowfall painted a serene tableau, muffling the world in a tranquil hush
-            as delicate flakes settled upon the branches of trees like nature's own
-            lacework.""",
-        metadata={"category": "snow"},
-    ),
-    Document(
-        page_content="""In the urban landscape, snow descended, transforming
-            bustling streets into a winter wonderland, where the laughter of
-            children echoed amidst the flurry of snowballs and the twinkle of
-            holiday lights.""",
-        metadata={"category": "snow"},
-    ),
-    Document(
-        page_content="""Atop the rugged peaks, snow fell with an unyielding
-            intensity, sculpting the landscape into a pristine alpine paradise,
-            where the frozen crystals shimmered under the moonlight, casting a
-            spell of enchantment over the wilderness below.""",
-        metadata={"category": "snow"},
+        page_content="Big Ben is a famous clock tower in London.",
+        metadata={"category": "landmark", "country": "UK", "year_built": 1859},
     ),
 ]
 
-
-vector_store.add_documents(docs)
-```
-
-### Update items in vector store
-
-To update an existing document in the vector store, use the following code:
-
-```python
-updated_document = Document(
-    page_content="qux", metadata={"source": "https://another-example.com"}
-)
-
-vector_store.update_documents(document_id="1", document=updated_document)
+vector_store.add_documents(documents)
 ```
 
 ### Delete items from vector store
-
-To delete documents from the vector store, use the following code:
 
 ```python
 vector_store.delete(ids=["3"])
@@ -177,105 +157,73 @@ vector_store.delete(ids=["3"])
 
 ## Query vector store
 
-Once your vector store has been created and the relevant documents have been added you will most likely wish to query it during the running of your chain or agent.
-
-### Query directly
-
-Performing a simple similarity search can be done as follows:
+### Similarity search
 
 ```python
-results = vector_store.similarity_search(query="trees in the snow", k=1)
+results = vector_store.similarity_search(query="famous landmarks", k=2)
 for doc in results:
     print(f"* {doc.page_content} [{doc.metadata}]")
 ```
 
-If you want to execute a similarity search and receive the corresponding scores you can run:
-
-- TODO: Edit and then run code cell to generate output
+Search with scores:
 
 ```python
-results = vector_store.similarity_search_with_score(query="trees in the snow", k=1)
+results = vector_store.similarity_search_with_score(query="famous landmarks", k=2)
 for doc, score in results:
     print(f"* [SIM={score:3f}] {doc.page_content} [{doc.metadata}]")
 ```
 
 ### Metadata filtering
 
-SingleStoreDB elevates search capabilities by enabling users to enhance and refine search results through prefiltering based on metadata fields. This functionality empowers developers and data analysts to fine-tune queries, ensuring that search results are precisely tailored to their requirements. By filtering search results using specific metadata attributes, users can narrow down the scope of their queries, focusing only on relevant data subsets.
-
-SingleStoreVectorStore supports both simple and advanced metadata filtering using powerful query operators.
+`SingleStoreVectorStore` supports both simple and advanced metadata filtering.
 
 #### Simple metadata filtering
 
-Use simple dictionary-style syntax for exact matches and backward compatibility:
+Use dictionary-style syntax for exact matches:
 
 ```python
 # Filter by a single field
-query = "trees branches"
-docs = vector_store.similarity_search(
-    query, filter={"category": "snow"}
+results = vector_store.similarity_search(
+    query="European landmarks",
+    k=5,
+    filter={"category": "landmark"},
 )
 
 # Filter by multiple fields (implicit AND)
-docs = vector_store.similarity_search(
-    query="landmarks",
-    filter={"country": "France", "category": "museum"}
+results = vector_store.similarity_search(
+    query="museums",
+    k=5,
+    filter={"category": "museum", "country": "France"},
 )
 ```
 
 #### Advanced metadata filtering
 
-Use advanced filters with operators like `$eq`, `$gt`, `$in`, `$and`, `$or`, and more for complex queries:
-
-**Comparison operators:**
+Use operators like `$eq`, `$gt`, `$in`, `$and`, `$or` for complex queries:
 
 ```python
-# Greater than, less than, and other comparisons
+# Comparison operators: $eq, $ne, $gt, $gte, $lt, $lte
 results = vector_store.similarity_search(
     query="old structures",
     k=10,
-    filter={"year_built": {"$lt": 1900}}  # Built before 1900
+    filter={"year_built": {"$lt": 1900}},
 )
 
-# Other operators: $eq, $ne, $gt, $gte, $lte
-results = vector_store.similarity_search(
-    query="landmarks",
-    filter={"year_built": {"$gte": 1800, "$lte": 1950}}
-)
-```
-
-**Collection operators:**
-
-```python
-# Check if value is in a list
+# Collection operators: $in, $nin
 results = vector_store.similarity_search(
     query="landmarks",
     k=10,
-    filter={"country": {"$in": ["France", "UK"]}}
+    filter={"country": {"$in": ["France", "UK"]}},
 )
 
-# Not in ($nin)
-results = vector_store.similarity_search(
-    query="museums",
-    filter={"country": {"$nin": ["USA", "Canada"]}}
-)
-```
-
-**Existence check:**
-
-```python
-# Check if a field exists
+# Existence check: $exists
 results = vector_store.similarity_search(
     query="heritage sites",
     k=10,
-    filter={"heritage_status": {"$exists": True}}
+    filter={"heritage_status": {"$exists": True}},
 )
-```
 
-**Logical operators:**
-
-```python
-# Combine multiple conditions with $and
+# Logical operators: $and, $or
 results = vector_store.similarity_search(
     query="european landmarks",
     k=10,
@@ -283,20 +231,9 @@ results = vector_store.similarity_search(
         "$and": [
             {"category": "landmark"},
             {"year_built": {"$gte": 1800}},
-            {"country": {"$in": ["France", "UK"]}}
+            {"country": {"$in": ["France", "UK"]}},
         ]
-    }
-)
-
-# Use $or for alternative conditions
-results = vector_store.similarity_search(
-    query="cultural sites",
-    filter={
-        "$or": [
-            {"category": "museum"},
-            {"category": "landmark"}
-        ]
-    }
+    },
 )
 
 # Complex nested queries
@@ -308,121 +245,307 @@ results = vector_store.similarity_search(
             {
                 "$and": [
                     {"category": "museum"},
-                    {"country": "France"}
+                    {"country": "France"},
                 ]
             },
             {
                 "$and": [
                     {"category": "landmark"},
-                    {"year_built": {"$lt": 1900}}
+                    {"year_built": {"$lt": 1900}},
                 ]
-            }
+            },
         ]
-    }
+    },
 )
 ```
 
 ### Vector index
 
-Enhance your search efficiency with SingleStore DB version 8.5 or above by leveraging [ANN vector indexes](https://docs.singlestore.com/cloud/reference/sql-reference/vector-functions/vector-indexing/). By setting `use_vector_index=True` during vector store object creation, you can activate this feature. Additionally, if your vectors differ in dimensionality from the default OpenAI embedding size of 1536, ensure to specify the `vector_size` parameter accordingly.
+Enhance search efficiency with SingleStore 8.5 or above by using [ANN vector indexes](https://docs.singlestore.com/cloud/reference/sql-reference/vector-functions/vector-indexing/). Set `use_vector_index=True` during vector store creation. If your vectors differ from the default OpenAI embedding size of 1536, specify the `vector_size` parameter.
 
 ### Search strategies
 
-SingleStoreDB presents a diverse range of search strategies, each meticulously crafted to cater to specific use cases and user preferences. The default `VECTOR_ONLY` strategy utilizes vector operations such as `dot_product` or `euclidean_distance` to calculate similarity scores directly between vectors, while `TEXT_ONLY` employs Lucene-based full-text search, particularly advantageous for text-centric applications. For users seeking a balanced approach, `FILTER_BY_TEXT` first refines results based on text similarity before conducting vector comparisons, whereas `FILTER_BY_VECTOR` prioritizes vector similarity, filtering results before assessing text similarity for optimal matches. Notably, both `FILTER_BY_TEXT` and `FILTER_BY_VECTOR` necessitate a full-text index for operation. Additionally, `WEIGHTED_SUM` emerges as a sophisticated strategy, calculating the final similarity score by weighing vector and text similarities, albeit exclusively utilizing dot_product distance calculations and also requiring a full-text index. These versatile strategies empower users to fine-tune searches according to their unique needs, facilitating efficient and precise data retrieval and analysis. Moreover, SingleStoreDB's hybrid approaches, exemplified by `FILTER_BY_TEXT`, `FILTER_BY_VECTOR`, and `WEIGHTED_SUM` strategies, seamlessly blend vector and text-based searches to maximize efficiency and accuracy, ensuring users can fully leverage the platform's capabilities for a wide range of applications.
+SingleStoreDB provides five search strategies:
+
+| Strategy | Description | Requires full-text index |
+| :--- | :--- | :---: |
+| `VECTOR_ONLY` | Uses `dot_product` or `euclidean_distance` for vector similarity (default) | No |
+| `TEXT_ONLY` | Lucene-based full-text search | Yes |
+| `FILTER_BY_TEXT` | Filters by text similarity first, then ranks by vector similarity | Yes |
+| `FILTER_BY_VECTOR` | Filters by vector similarity first, then ranks by text similarity | Yes |
+| `WEIGHTED_SUM` | Computes a weighted combination of vector and text similarity scores | Yes |
 
 ```python
-from langchain_singlestore.vectorstores import DistanceStrategy
+from langchain_singlestore import SingleStoreVectorStore
 
-docsearch = SingleStoreVectorStore.from_documents(
-    docs,
-    embeddings,
-    distance_strategy=DistanceStrategy.DOT_PRODUCT,  # Use dot product for similarity search
-    use_vector_index=True,  # Use vector index for faster search
-    use_full_text_search=True,  # Use full text index
-)
-
-vectorResults = docsearch.similarity_search(
-    "rainstorm in parched desert, rain",
-    k=1,
+# Vector search only (default, fastest)
+results = vector_store.similarity_search(
+    query="landmarks",
+    k=5,
     search_strategy=SingleStoreVectorStore.SearchStrategy.VECTOR_ONLY,
-    filter={"category": "rain"},
 )
-print(vectorResults[0].page_content)
 
-textResults = docsearch.similarity_search(
-    "rainstorm in parched desert, rain",
-    k=1,
+# Full-text search only (best for keyword matching)
+results = vector_store.similarity_search(
+    query="Eiffel",
+    k=5,
     search_strategy=SingleStoreVectorStore.SearchStrategy.TEXT_ONLY,
 )
-print(textResults[0].page_content)
 
-filteredByTextResults = docsearch.similarity_search(
-    "rainstorm in parched desert, rain",
-    k=1,
+# Filter by text, then rank by vector (hybrid)
+results = vector_store.similarity_search(
+    query="landmarks in paris",
+    k=5,
     search_strategy=SingleStoreVectorStore.SearchStrategy.FILTER_BY_TEXT,
-    filter_threshold=0.1,
 )
-print(filteredByTextResults[0].page_content)
 
-filteredByVectorResults = docsearch.similarity_search(
-    "rainstorm in parched desert, rain",
-    k=1,
+# Filter by vector, then rank by text
+results = vector_store.similarity_search(
+    query="iconic structures",
+    k=5,
     search_strategy=SingleStoreVectorStore.SearchStrategy.FILTER_BY_VECTOR,
-    filter_threshold=0.1,
 )
-print(filteredByVectorResults[0].page_content)
 
-weightedSumResults = docsearch.similarity_search(
-    "rainstorm in parched desert, rain",
-    k=1,
+# Weighted combination (balanced approach)
+results = vector_store.similarity_search(
+    query="famous landmarks",
+    k=5,
     search_strategy=SingleStoreVectorStore.SearchStrategy.WEIGHTED_SUM,
-    text_weight=0.2,
-    vector_weight=0.8,
+    text_weight=0.3,
+    vector_weight=0.7,
 )
-print(weightedSumResults[0].page_content)
 ```
 
-### Query by turning into retriever
+### Full-text index versions
 
-You can also transform the vector store into a retriever for easier usage in your chains.
+SingleStore supports two versions of full-text indexes:
 
-```python
-retriever = vector_store.as_retriever(search_kwargs={"k": 1})
-retriever.invoke("trees in the snow")
-```
-
-## Multi-modal example: Leveraging CLIP and OpenClip embeddings
-
-In the realm of multi-modal data analysis, the integration of diverse information types like images and text has become increasingly crucial. One powerful tool facilitating such integration is [CLIP](https://openai.com/research/clip), a cutting-edge model capable of embedding both images and text into a shared semantic space. By doing so, CLIP enables the retrieval of relevant content across different modalities through similarity search.
-
-To illustrate, let's consider an application scenario where we aim to effectively analyze multi-modal data. In this example, we harness the capabilities of [OpenClip multimodal embeddings](/oss/integrations/embeddings/open_clip), which leverage CLIP's framework. With OpenClip, we can seamlessly embed textual descriptions alongside corresponding images, enabling comprehensive analysis and retrieval tasks. Whether it's identifying visually similar images based on textual queries or finding relevant text passages associated with specific visual content, OpenClip empowers users to explore and extract insights from multi-modal data with remarkable efficiency and accuracy.
+| Feature | V1 | V2 |
+| :--- | :---: | :---: |
+| SingleStore compatibility | All versions | 8.7+ |
+| MATCH scoring | ✓ | ✓ |
+| BM25 scoring | ✗ | ✓ |
+| BM25_GLOBAL scoring | ✗ | ✓ |
 
 ```python
-pip install -U langchain openai lanchain-singlestore langchain-experimental
-```
+from langchain_openai import OpenAIEmbeddings
+from langchain_singlestore import FullTextIndexVersion, SingleStoreVectorStore
 
-```python
-import os
-
-from langchain_experimental.open_clip import OpenCLIPEmbeddings
-from langchain_singlestore.vectorstores import SingleStoreVectorStore
-
-os.environ["SINGLESTOREDB_URL"] = "root:pass@localhost:3306/db"
-
-TEST_IMAGES_DIR = "../../modules/images"
-
-docsearch = SingleStoreVectorStore(OpenCLIPEmbeddings())
-
-image_uris = sorted(
-    [
-        os.path.join(TEST_IMAGES_DIR, image_name)
-        for image_name in os.listdir(TEST_IMAGES_DIR)
-        if image_name.endswith(".jpg")
-    ]
+# V1: compatible with all SingleStore versions
+vector_store_v1 = SingleStoreVectorStore(
+    embedding=OpenAIEmbeddings(),
+    host="127.0.0.1:3306/db",
+    use_full_text_search=True,
+    full_text_index_version=FullTextIndexVersion.V1,  # Default
 )
 
-# Add images
-docsearch.add_images(uris=image_uris)
+# V2: requires SingleStore 8.7+, supports BM25 scoring
+vector_store_v2 = SingleStoreVectorStore(
+    embedding=OpenAIEmbeddings(),
+    host="127.0.0.1:3306/db",
+    use_full_text_search=True,
+    full_text_index_version=FullTextIndexVersion.V2,
+)
+```
+
+### Full-text scoring modes
+
+When using full-text search strategies (`TEXT_ONLY`, `FILTER_BY_TEXT`, `FILTER_BY_VECTOR`, `WEIGHTED_SUM`), choose from different scoring algorithms:
+
+| Mode | Description | Index version | Use case |
+| :--- | :--- | :--- | :--- |
+| `MATCH` | Native SingleStore `MATCH()` function | V1, V2 | General text search, backward compatibility |
+| `BM25` | Best Matching 25 algorithm with TF-IDF | V2 only | More accurate relevance scoring |
+| `BM25_GLOBAL` | BM25 with global IDF statistics | V2 only | Consistent scoring in distributed environments |
+
+```python
+from langchain_openai import OpenAIEmbeddings
+from langchain_singlestore import (
+    FullTextIndexVersion,
+    FullTextScoringMode,
+    SingleStoreVectorStore,
+)
+
+# Initialize with V2 full-text index (required for BM25 modes)
+vector_store = SingleStoreVectorStore(
+    embedding=OpenAIEmbeddings(),
+    host="127.0.0.1:3306/db",
+    use_full_text_search=True,
+    full_text_index_version=FullTextIndexVersion.V2,
+)
+
+# MATCH mode (default): works with V1 and V2
+results = vector_store.similarity_search(
+    query="famous landmarks",
+    k=5,
+    search_strategy=SingleStoreVectorStore.SearchStrategy.TEXT_ONLY,
+    full_text_scoring_mode=FullTextScoringMode.MATCH,
+)
+
+# BM25 mode: requires V2, uses TF-IDF and document length normalization
+results = vector_store.similarity_search(
+    query="famous landmarks",
+    k=5,
+    search_strategy=SingleStoreVectorStore.SearchStrategy.TEXT_ONLY,
+    full_text_scoring_mode=FullTextScoringMode.BM25,
+)
+
+# BM25_GLOBAL mode: requires V2, computes IDF statistics across the entire dataset
+results = vector_store.similarity_search(
+    query="famous landmarks",
+    k=5,
+    search_strategy=SingleStoreVectorStore.SearchStrategy.TEXT_ONLY,
+    full_text_scoring_mode=FullTextScoringMode.BM25_GLOBAL,
+)
+```
+
+<Tip>
+Use **MATCH** for basic search needs. Use **BM25** for better relevance ranking that considers term frequency, inverse document frequency, and document length. Use **BM25_GLOBAL** when you need consistent scoring across a distributed SingleStore cluster.
+</Tip>
+
+### Pre-computed embeddings
+
+`SingleStoreVectorStore` supports pre-computed embeddings instead of generating them at runtime. This is useful when you have embeddings from a different source, want to avoid repeated embedding API calls, or are migrating data from another vector store.
+
+#### Add texts with pre-computed embeddings
+
+```python
+texts = [
+    "The Eiffel Tower is in Paris.",
+    "Big Ben is in London.",
+    "The Colosseum is in Rome.",
+]
+precomputed_embeddings = [
+    [0.1, 0.2, 0.3, 0.4],  # embedding for text 1
+    [0.4, 0.5, 0.6, 0.7],  # embedding for text 2
+    [0.7, 0.8, 0.9, 1.0],  # embedding for text 3
+]
+metadatas = [
+    {"city": "Paris"},
+    {"city": "London"},
+    {"city": "Rome"},
+]
+
+# Bypasses the embedding model
+ids = vector_store.add_texts(
+    texts=texts,
+    metadatas=metadatas,
+    embeddings=precomputed_embeddings,
+)
+```
+
+#### Add documents with pre-computed embeddings
+
+```python
+from langchain_core.documents import Document
+
+documents = [
+    Document(page_content="The Eiffel Tower is in Paris.", metadata={"city": "Paris"}),
+    Document(page_content="Big Ben is in London.", metadata={"city": "London"}),
+    Document(page_content="The Colosseum is in Rome.", metadata={"city": "Rome"}),
+]
+precomputed_embeddings = [
+    [0.1, 0.2, 0.3, 0.4],
+    [0.4, 0.5, 0.6, 0.7],
+    [0.7, 0.8, 0.9, 1.0],
+]
+
+ids = vector_store.add_documents(
+    documents=documents,
+    embeddings=precomputed_embeddings,
+)
+```
+
+#### Add images with pre-computed embeddings
+
+```python
+image_uris = [
+    "path/to/image1.jpg",
+    "path/to/image2.jpg",
+    "path/to/image3.jpg",
+]
+precomputed_image_embeddings = [
+    [0.1, 0.2, 0.3, 0.4],
+    [0.4, 0.5, 0.6, 0.7],
+    [0.7, 0.8, 0.9, 1.0],
+]
+
+ids = vector_store.add_images(
+    uris=image_uris,
+    embeddings=precomputed_image_embeddings,
+)
+```
+
+#### Search with a pre-computed query embedding
+
+```python
+query_embedding = [0.15, 0.25, 0.35, 0.45]
+
+# Bypasses embed_query
+results = vector_store.similarity_search(
+    query="landmarks",
+    k=5,
+    query_embedding=query_embedding,
+)
+
+# Also works with similarity_search_with_score
+results_with_scores = vector_store.similarity_search_with_score(
+    query="landmarks",
+    k=5,
+    query_embedding=query_embedding,
+)
+```
+
+Pre-computed embeddings work with all search strategies:
+
+```python
+# VECTOR_ONLY with pre-computed query embedding
+results = vector_store.similarity_search(
+    query="landmarks",
+    k=5,
+    query_embedding=query_embedding,
+    search_strategy=SingleStoreVectorStore.SearchStrategy.VECTOR_ONLY,
+)
+
+# WEIGHTED_SUM with pre-computed query embedding
+results = vector_store.similarity_search(
+    query="famous landmarks",
+    k=5,
+    query_embedding=query_embedding,
+    search_strategy=SingleStoreVectorStore.SearchStrategy.WEIGHTED_SUM,
+    text_weight=0.3,
+    vector_weight=0.7,
+)
+```
+
+#### Create a vector store with pre-computed embeddings
+
+```python
+# Using from_texts
+vector_store = SingleStoreVectorStore.from_texts(
+    texts=texts,
+    embedding=some_embedding_model,
+    metadatas=metadatas,
+    embeddings=precomputed_embeddings,
+    host="127.0.0.1:3306/db",
+)
+
+# Using from_documents
+vector_store = SingleStoreVectorStore.from_documents(
+    documents=documents,
+    embedding=some_embedding_model,
+    embeddings=precomputed_embeddings,
+    host="127.0.0.1:3306/db",
+)
+```
+
+### Use as a retriever
+
+Transform the vector store into a retriever for use in chains:
+
+```python
+retriever = vector_store.as_retriever(search_kwargs={"k": 2})
+retriever.invoke("famous landmarks")
 ```
 
 ## Usage for retrieval-augmented generation
@@ -433,8 +556,6 @@ For guides on how to use this vector store for retrieval-augmented generation (R
 - [Agentic RAG](/oss/langgraph/agentic-rag)
 - [Retrieval docs](/oss/langchain/retrieval)
 
----
-
 ## API reference
 
-For detailed documentation of all SingleStore Document Loader features and configurations head to the github page: [https://github.com/singlestore-labs/langchain-singlestore/](https://github.com/singlestore-labs/langchain-singlestore/)
+For detailed documentation of all `SingleStoreVectorStore` features and configurations, see the [langchain-singlestore GitHub repository](https://github.com/singlestore-labs/langchain-singlestore/).

@@ -1,24 +1,13 @@
 ---
-title: "SingleStoreLoader integration"
-description: "Integrate with the SingleStoreLoader document loader using LangChain Python."
+title: "SingleStore chat message history"
+description: "Store chat message history in SingleStore using LangChain Python."
 ---
 
-`SingleStoreLoader` loads documents directly from a [SingleStore](https://singlestore.com/) database table. It is part of the `langchain-singlestore` integration package.
-
-## Overview
-
-### Integration details
+`SingleStoreChatMessageHistory` provides persistent storage for chat message history in [SingleStore](https://singlestore.com/). It integrates with LangChain chat models and chains to maintain conversation context across sessions.
 
 | Class | Package | JS support |
 | :--- | :--- | :---: |
-| `SingleStoreLoader` | `langchain_singlestore` | ❌ |
-
-### Features
-
-- Lazy loading for large datasets
-- Native asynchronous operations
-- Configurable table and field mappings
-- Efficient batch processing
+| `SingleStoreChatMessageHistory` | `langchain_singlestore` | ❌ |
 
 ## Setup
 
@@ -28,12 +17,16 @@ pip install -qU langchain-singlestore
 
 ## Initialization
 
+### Required parameters
+
+- **session_id** (`str`): Unique identifier for the conversation session.
+
 ### Table parameters
 
-- **table_name** (`str`): Name of the table to query. Defaults to `"embeddings"`.
-- **content_field** (`str`): Column containing document content. Defaults to `"content"`.
-- **metadata_field** (`str`): Column containing document metadata (JSON). Defaults to `"metadata"`.
-- **id_field** (`str`): Column containing document IDs. Defaults to `"id"`.
+- **table_name** (`str`): Name of the table for storing messages. Defaults to `"message_store"`.
+- **id_field** (`str`): Name of the auto-increment primary key column. Defaults to `"id"`.
+- **session_id_field** (`str`): Name of the column storing session IDs. Defaults to `"session_id"`.
+- **message_field** (`str`): Name of the column storing message JSON. Defaults to `"message"`.
 
 ### Connection pool parameters
 
@@ -80,14 +73,23 @@ Connection parameters and credentials can be provided through environment variab
 ## Basic usage
 
 ```python
-from langchain_singlestore import SingleStoreLoader
+from langchain_core.messages import AIMessage, HumanMessage
+from langchain_singlestore import SingleStoreChatMessageHistory
 
-loader = SingleStoreLoader(
+chat_history = SingleStoreChatMessageHistory(
+    session_id="user-123-session-1",
     host="127.0.0.1:3306/db",
-    table_name="documents",
-    content_field="content",
-    metadata_field="metadata",
 )
+
+# Add messages
+chat_history.add_message(HumanMessage(content="What is SingleStore?"))
+chat_history.add_message(
+    AIMessage(content="SingleStore is a high-performance distributed SQL database.")
+)
+
+# Retrieve messages
+for msg in chat_history.messages:
+    print(f"{msg.type}: {msg.content}")
 ```
 
 ## Configure with environment variables
@@ -95,67 +97,63 @@ loader = SingleStoreLoader(
 ```python
 import os
 
-from langchain_singlestore import SingleStoreLoader
+from langchain_singlestore import SingleStoreChatMessageHistory
 
 os.environ["SINGLESTOREDB_URL"] = "user:password@host:3306/db_name"
 
-loader = SingleStoreLoader(
-    table_name="documents",
-    content_field="content",
-    metadata_field="metadata",
+chat_history = SingleStoreChatMessageHistory(
+    session_id="user-123-session-1",
 )
 ```
 
 ## Configure with explicit connection parameters
 
 ```python
-from langchain_singlestore import SingleStoreLoader
+from langchain_singlestore import SingleStoreChatMessageHistory
 
-loader = SingleStoreLoader(
+chat_history = SingleStoreChatMessageHistory(
+    session_id="user-123-session-1",
     host="127.0.0.1",
     port=3306,
     user="user",
     password="password",
     database="db",
-    table_name="documents",
-    content_field="content",
-    metadata_field="metadata",
+    table_name="my_custom_table",
     pool_size=10,
     timeout=60,
 )
 ```
 
-## Load
+## Clear conversation history
 
 ```python
-docs = loader.load()
-print(f"Loaded {len(docs)} documents")
-print(docs[0].page_content[:100])
-print(docs[0].metadata)
+chat_history.clear()
 ```
 
-## Lazy load
+## Use with a chat model
 
 ```python
-page = []
-for doc in loader.lazy_load():
-    page.append(doc)
-    if len(page) >= 10:
-        # Process the batch, for example:
-        # index.upsert(page)
-        page = []
-```
+from langchain_core.prompts import ChatPromptTemplate, MessagesPlaceholder
+from langchain_openai import ChatOpenAI
+from langchain_singlestore import SingleStoreChatMessageHistory
 
-## Use with a text splitter
+chat_history = SingleStoreChatMessageHistory(
+    session_id="user-123-session-2",
+    host="127.0.0.1:3306/db",
+)
 
-```python
-from langchain_text_splitters import RecursiveCharacterTextSplitter
+prompt = ChatPromptTemplate.from_messages(
+    [
+        ("system", "You are a helpful assistant."),
+        MessagesPlaceholder(variable_name="history"),
+        ("human", "{input}"),
+    ]
+)
 
-docs = loader.load()
-splitter = RecursiveCharacterTextSplitter(chunk_size=1000, chunk_overlap=200)
-chunked_docs = splitter.split_documents(docs)
+llm = ChatOpenAI()
+chain = prompt | llm
 ```
 
 ## API reference
 
-For detailed documentation of all `SingleStoreLoader` features and configurations, see the [langchain-singlestore GitHub repository](https://github.com/singlestore-labs/langchain-singlestore/).
+For detailed documentation of all `SingleStoreChatMessageHistory` features and configurations, see the [langchain-singlestore GitHub repository](https://github.com/singlestore-labs/langchain-singlestore/).
