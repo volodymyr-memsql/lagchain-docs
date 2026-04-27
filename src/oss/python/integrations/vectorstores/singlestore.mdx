@@ -3,9 +3,13 @@ title: "SingleStoreVectorStore integration"
 description: "Integrate with the SingleStoreVectorStore using LangChain Python."
 ---
 
-[SingleStore](https://singlestore.com/) is a high-performance distributed SQL database designed for both [cloud](https://www.singlestore.com/cloud/) and on-premises environments. It provides advanced vector storage and operations with built-in vector functions like [dot_product](https://docs.singlestore.com/managed-service/en/reference/sql-reference/vector-functions/dot_product.html) and [euclidean_distance](https://docs.singlestore.com/managed-service/en/reference/sql-reference/vector-functions/euclidean_distance.html), combined with [full-text indexing based on Lucene](https://docs.singlestore.com/cloud/developer-resources/functional-extensions/working-with-full-text-search/) for hybrid search capabilities.
+> [SingleStore](https://singlestore.com/) is a distributed SQL database for transactional and analytical workloads. You can run it in the [cloud](https://www.singlestore.com/cloud/) or on premises.
 
-`SingleStoreVectorStore` supports multiple search strategies, advanced metadata filtering, pre-computed embeddings, configurable full-text index versions (V1, V2) with different scoring algorithms (MATCH, BM25, BM25_GLOBAL), and both vector and text-based indexing.
+SingleStore supports vector storage and similarity search alongside SQL. It includes vector functions such as [dot_product](https://docs.singlestore.com/managed-service/en/reference/sql-reference/vector-functions/dot_product.html) and [euclidean_distance](https://docs.singlestore.com/managed-service/en/reference/sql-reference/vector-functions/euclidean_distance.html). For table design, indexing, and query patterns, see [working with vector data](https://docs.singlestore.com/managed-service/en/developer-resources/functional-extensions/working-with-vector-data.html) in the SingleStore documentation.
+
+You can also combine vector search with [full-text indexing based on Lucene](https://docs.singlestore.com/cloud/developer-resources/functional-extensions/working-with-full-text-search/) and filter on document metadata. Depending on your workload, you can prefilter on text or vectors, or combine scores (for example, with a weighted sum).
+
+Use the following sections to connect SingleStore to LangChain.
 
 | Class | Package | JS support |
 | :--- | :--- |  :---: |
