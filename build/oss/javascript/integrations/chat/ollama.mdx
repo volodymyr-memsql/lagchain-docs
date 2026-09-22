@@ -1,6 +1,14 @@
 ---
-title: "ChatOllama integration"
-description: "Integrate with the ChatOllama chat model using LangChain JavaScript."
+title: ChatOllama integration
+description: Integrate with the ChatOllama chat model using LangChain JavaScript.
+integration:
+  name: ChatOllama
+  npm: '@langchain/ollama'
+  featured: true
+  stream: true
+  tool_calling: true
+  structured_output: true
+  multimodal: true
 ---
 
 [Ollama](https://ollama.ai/) allows you to run open-source Large Language Models (LLMs), such as Llama 3.1, locally.
@@ -35,7 +43,7 @@ Follow [these instructions](https://github.com/ollama/ollama) to set up and run 
 
 ### Credentials
 
-If you want to get automated tracing of your model calls you can also set your [LangSmith](/langsmith/home) API key by uncommenting below:
+If you want to get automated tracing of your model calls you can also set your [LangSmith](/langsmith/observability) API key by uncommenting below:
 
 ```bash
 # export LANGSMITH_TRACING="true"
@@ -320,10 +328,10 @@ For detailed documentation of all `ChatOllama` features and configurations head 
 ---
 
 <div className="source-links">
-<Callout icon="edit">
-    [Edit this page on GitHub](https://github.com/langchain-ai/docs/edit/main/src/oss/javascript/integrations/chat/ollama.mdx) or [file an issue](https://github.com/langchain-ai/docs/issues/new/choose).
-</Callout>
 <Callout icon="terminal-2">
     [Connect these docs](/use-these-docs) to Claude, VSCode, and more via MCP for real-time answers.
+</Callout>
+<Callout icon="edit">
+    [Edit this page on GitHub](https://github.com/langchain-ai/docs/edit/main/src/oss/javascript/integrations/chat/ollama.mdx) or [file an issue](https://github.com/langchain-ai/docs/issues/new/choose).
 </Callout>
 </div>

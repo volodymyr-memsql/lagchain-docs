@@ -15,7 +15,7 @@ When you connect Arcade to your workspace, a workspace admin selects an Arcade o
 
 ## Set up Arcade as a workspace admin
 
-Only [workspace admins](/langsmith/rbac#workspace-admin) can configure the Arcade integration. Once configured, the integration is available to all users in the workspace.
+Only [workspace admins](/langsmith/rbac#workspace-admin) can configure the Arcade integration, including adding or deleting MCP Gateways. Once configured, the integration is available to all users in the workspace.
 
 <Steps>
   <Step title="Open the Integrations tab">
@@ -56,10 +56,9 @@ Workspace members cannot change the Arcade organization or project. Only admins 
 
 After connecting, add Arcade tools to a specific agent:
 
-1. Open your agent in [Fleet](https://smith.langchain.com/agents) and click the <Icon icon="pencil"/> **Edit Agent** icon.
-1. In the **Toolbox** section, click **+ Add**.
+1. Open your agent in [Fleet](https://smith.langchain.com/agents?utm_source=docs&utm_medium=cta&utm_campaign=langsmith-signup&utm_content=langsmith-fleet-arcade).
+1. In the sidebar, expand the **Connections** drawer and click **Add connection**.
 1. Select the Arcade tools you want to enable for the agent.
-1. Click **Save changes**.
 
 The agent can now call these tools at runtime. When a tool requires authorization, Arcade prompts the user to grant access via OAuth.
 
@@ -106,10 +105,10 @@ Admins can remove the Arcade integration entirely by deleting the workspace conf
 ---
 
 <div className="source-links">
-<Callout icon="edit">
-    [Edit this page on GitHub](https://github.com/langchain-ai/docs/edit/main/src/langsmith/fleet/arcade.mdx) or [file an issue](https://github.com/langchain-ai/docs/issues/new/choose).
-</Callout>
 <Callout icon="terminal-2">
     [Connect these docs](/use-these-docs) to Claude, VSCode, and more via MCP for real-time answers.
+</Callout>
+<Callout icon="edit">
+    [Edit this page on GitHub](https://github.com/langchain-ai/docs/edit/main/src/langsmith/fleet/arcade.mdx) or [file an issue](https://github.com/langchain-ai/docs/issues/new/choose).
 </Callout>
 </div>

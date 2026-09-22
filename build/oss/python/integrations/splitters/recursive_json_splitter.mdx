@@ -1,6 +1,8 @@
 ---
-title: "Split JSON data - text splitter integration"
-description: "Integrate with the Split JSON data text splitter using LangChain Python."
+title: Split JSON data - text splitter integration
+description: Integrate with the Split JSON data text splitter using LangChain Python.
+integration:
+  name: Split JSON data - text splitter
 ---
 
 This json splitter [splits](/oss/python/integrations/splitters/) json data while allowing control over chunk sizes. It traverses json data depth first and builds smaller json chunks. It attempts to keep nested json objects whole but will split them if needed to keep chunks between a min_chunk_size and the max_chunk_size.
@@ -130,7 +132,6 @@ docs[1]
 ```
 
 
-
 ```python
 Document(page_content='{"paths": {"/api/v1/sessions/{session_id}": {"get": {"tags": ["tracer-sessions"], "summary": "Read Tracer Session", "description": "Get a specific session.", "operationId": "read_tracer_session_api_v1_sessions__session_id__get"}}}}')
 ```
@@ -138,10 +139,10 @@ Document(page_content='{"paths": {"/api/v1/sessions/{session_id}": {"get": {"tag
 ---
 
 <div className="source-links">
-<Callout icon="edit">
-    [Edit this page on GitHub](https://github.com/langchain-ai/docs/edit/main/src/oss/python/integrations/splitters/recursive_json_splitter.mdx) or [file an issue](https://github.com/langchain-ai/docs/issues/new/choose).
-</Callout>
 <Callout icon="terminal-2">
     [Connect these docs](/use-these-docs) to Claude, VSCode, and more via MCP for real-time answers.
+</Callout>
+<Callout icon="edit">
+    [Edit this page on GitHub](https://github.com/langchain-ai/docs/edit/main/src/oss/python/integrations/splitters/recursive_json_splitter.mdx) or [file an issue](https://github.com/langchain-ai/docs/issues/new/choose).
 </Callout>
 </div>

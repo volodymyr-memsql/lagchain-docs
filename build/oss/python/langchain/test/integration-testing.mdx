@@ -15,6 +15,8 @@ Use pytest markers to tag integration tests:
 
 ```python
 import pytest
+from langchain.agents import create_agent
+from langchain.messages import HumanMessage
 
 @pytest.mark.integration
 def test_agent_with_real_model():
@@ -92,6 +94,9 @@ load_dotenv()
 LLM responses vary between runs. Instead of asserting on exact output strings, verify the structural properties of the response: message types, tool call names, argument shapes, and message count.
 
 ```python
+from langchain.agents import create_agent
+from langchain.messages import AIMessage, HumanMessage
+
 def test_agent_calls_weather_tool():
     agent = create_agent("claude-sonnet-4-6", tools=[get_weather])
     result = agent.invoke({
@@ -124,14 +129,16 @@ def test_agent_calls_weather_tool():
 
 Integration tests that call LLM APIs incur real costs. A few practices help keep test suites fast and affordable:
 
-- **Use smaller models**: `gemini-3.1-flash-lite-preview` or equivalent for tests that only need to verify tool calling and response structure.
+- **Use smaller models**: `gemini-3.1-flash-lite` or equivalent for tests that only need to verify tool calling and response structure.
 - **Set `maxTokens`**: Cap response length to avoid long, expensive completions.
 - **Limit test scope**: Test one behavior per test. Avoid end-to-end scenarios that chain many LLM calls when a single-turn test suffices.
 - **Run selectively**: Use the test separation from [above](#separate-unit-and-integration-tests) to run integration tests only in CI or before deploy, not on every file save.
 
 ```python
+from langchain.agents import create_agent
+
 agent = create_agent(
-    "gemini-3.1-flash-lite-preview",
+    "gemini-3.1-flash-lite",
     tools=[get_weather],
     model_kwargs={"max_tokens": 256},
 )
@@ -190,6 +197,10 @@ addopts = "--record-mode=once"
 Decorate your tests with the `vcr` marker:
 
 ```python
+import pytest
+from langchain.agents import create_agent
+from langchain.messages import HumanMessage
+
 @pytest.mark.vcr()
 def test_agent_trajectory():
     agent = create_agent("claude-sonnet-4-6", tools=[get_weather])
@@ -218,10 +229,10 @@ Learn how to evaluate agent trajectories with deterministic matching or LLM-as-j
 ---
 
 <div className="source-links">
-<Callout icon="edit">
-    [Edit this page on GitHub](https://github.com/langchain-ai/docs/edit/main/src/oss/langchain/test/integration-testing.mdx) or [file an issue](https://github.com/langchain-ai/docs/issues/new/choose).
-</Callout>
 <Callout icon="terminal-2">
     [Connect these docs](/use-these-docs) to Claude, VSCode, and more via MCP for real-time answers.
+</Callout>
+<Callout icon="edit">
+    [Edit this page on GitHub](https://github.com/langchain-ai/docs/edit/main/src/oss/langchain/test/integration-testing.mdx) or [file an issue](https://github.com/langchain-ai/docs/issues/new/choose).
 </Callout>
 </div>

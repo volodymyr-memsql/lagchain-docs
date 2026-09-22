@@ -2,10 +2,14 @@
 title: Streaming
 ---
 
-import NostreamTagPy from '/snippets/code-samples/nostream-tag-py.mdx';
-import NostreamTagJs from '/snippets/code-samples/nostream-tag-js.mdx';
+import NostreamTagPy from '/snippets/javascript/code-samples/nostream-tag-py.mdx';
+import NostreamTagJs from '/snippets/javascript/code-samples/nostream-tag-js.mdx';
 
-LangGraph implements a streaming system to surface real-time updates. Streaming is crucial for enhancing the responsiveness of applications built on LLMs. By displaying output progressively, even before a complete response is ready, streaming significantly improves user experience (UX), particularly when dealing with the latency of LLMs.
+<Tip>
+For new applications, we recommend [event streaming](/oss/javascript/langgraph/event-streaming)—the typed-projection API introduced in LangGraph v1.2. Event streaming gives you separate iterators per projection (messages, values, subgraphs, output) so you can consume them independently instead of branching on `stream_mode` chunks.
+</Tip>
+
+This page covers LangGraph's stream-mode API. It exposes graph execution through stream modes such as `updates`, `values`, `messages`, `custom`, `checkpoints`, `tasks`, and `debug`. Use it when you need direct access to graph-runtime events or specific stream-mode output.
 
 ## Get started
 
@@ -23,6 +27,10 @@ for await (const chunk of await graph.stream(inputs, {
 }
 ```
 
+
+<Tip>
+Debug streaming events, inspect token-by-token LLM output, and monitor latency with [LangSmith](https://smith.langchain.com?utm_source=docs&utm_medium=cta&utm_campaign=langsmith-signup&utm_content=oss-langgraph-streaming). Follow the [tracing quickstart](/langsmith/trace-with-langgraph) to get set up.
+</Tip>
 
 
 
@@ -134,7 +142,7 @@ const MyState = new StateSchema({
   joke: z.string().default(""),
 });
 
-const model = new ChatOpenAI({ model: "gpt-4.1-mini" });
+const model = new ChatOpenAI({ model: "gpt-5.4-mini" });
 
 const callModel: GraphNode<typeof MyState> = async (state) => {
   // Call the LLM to generate a joke about a topic
@@ -175,12 +183,12 @@ import { ChatOpenAI } from "@langchain/openai";
 
 // model1 is tagged with "joke"
 const model1 = new ChatOpenAI({
-  model: "gpt-4.1-mini",
+  model: "gpt-5.4-mini",
   tags: ['joke']
 });
 // model2 is tagged with "poem"
 const model2 = new ChatOpenAI({
-  model: "gpt-4.1-mini",
+  model: "gpt-5.4-mini",
   tags: ['poem']
 });
 
@@ -211,12 +219,12 @@ for await (const [msg, metadata] of await graph.stream(
 
   // The jokeModel is tagged with "joke"
   const jokeModel = new ChatOpenAI({
-    model: "gpt-4.1-mini",
+    model: "gpt-5.4-mini",
     tags: ["joke"]
   });
   // The poemModel is tagged with "poem"
   const poemModel = new ChatOpenAI({
-    model: "gpt-4.1-mini",
+    model: "gpt-5.4-mini",
     tags: ["poem"]
   });
 
@@ -312,7 +320,7 @@ for await (const [msg, metadata] of await graph.stream(
   import { StateGraph, StateSchema, GraphNode, START } from "@langchain/langgraph";
   import * as z from "zod";
 
-  const model = new ChatOpenAI({ model: "gpt-4.1-mini" });
+  const model = new ChatOpenAI({ model: "gpt-5.4-mini" });
 
   const State = new StateSchema({
     topic: z.string(),
@@ -526,7 +534,7 @@ for await (const [mode, chunk] of await graph.stream(
 
 #### Use tool progress in React with `useStream`
 
-The `useStream` hook from `@langchain/langgraph-sdk/react` exposes a `toolProgress` array when you include `"tools"` in your stream modes. Each entry is a `ToolProgress` object that tracks the current state of a running tool:
+The [`useStream`](https://reference.langchain.com/javascript/langchain-react/index/useStream) hook from `@langchain/langgraph-sdk/react` exposes a `toolProgress` array when you include `"tools"` in your stream modes. Each entry is a `ToolProgress` object that tracks the current state of a running tool:
 
 | Field | Description |
 |-------|-------------|
@@ -651,7 +659,7 @@ const checkHotels = tool(
 );
 
 export const agent = createAgent({
-  model: new ChatOpenAI({ model: "gpt-4o-mini" }),
+  model: new ChatOpenAI({ model: "gpt-5.4-mini" }),
   tools: [searchFlights, checkHotels],
   checkpointer: new MemorySaver(),
 });
@@ -742,6 +750,37 @@ for await (const chunk of await graph.stream(
   console.log(chunk);
 }
 ```
+
+
+
+
+<Note>
+    This applies to every `streamMode`, including `"messages"`. [`createAgent`](https://reference.langchain.com/javascript/langchain/index/createAgent) returns a `ReactAgent` wrapper; pass `agent.graph` when adding it as a node so the parent treats it as a subgraph. With `subgraphs: true`, message chunks are `[namespace, [token, metadata]]`, so you can tell which subgraph emitted them.
+
+    ```typescript
+    import { createAgent } from "langchain";
+    import { END, START, StateGraph } from "@langchain/langgraph";
+
+    const agent = createAgent({ model, tools, stateSchema: State });
+
+    const graph = new StateGraph(State)
+        .addNode("agent", agent.graph)
+        .addEdge(START, "agent")
+        .addEdge("agent", END)
+        .compile();
+
+    for await (const [ns, data] of await graph.stream(
+        { messages: [{ role: "user", content: "..." }] },
+        {
+            streamMode: "messages",
+            subgraphs: true, // [!code highlight]
+        }
+    )) {
+        const [token, metadata] = data;
+        console.log(ns, token, metadata);
+    }
+    ```
+</Note>
 
 
 <Accordion title="Extended example: streaming from subgraphs">
@@ -899,7 +938,7 @@ for await (const chunk of await graph.stream(
   import OpenAI from "openai";
 
   const openaiClient = new OpenAI();
-  const modelName = "gpt-4.1-mini";
+  const modelName = "gpt-5.4-mini";
 
   async function* streamTokens(modelName: string, messages: any[]) {
     const response = await openaiClient.chat.completions.create({
@@ -1027,7 +1066,7 @@ Set `streaming: false` when initializing the model.
 import { ChatOpenAI } from "@langchain/openai";
 
 const model = new ChatOpenAI({
-  model: "o1-preview",
+  model: "gpt-5.5",
   // Set streaming: false to disable streaming for the chat model
   streaming: false,
 });
@@ -1043,10 +1082,10 @@ Not all chat model integrations support the `streaming` parameter. If your model
 ---
 
 <div className="source-links">
-<Callout icon="edit">
-    [Edit this page on GitHub](https://github.com/langchain-ai/docs/edit/main/src/oss/langgraph/streaming.mdx) or [file an issue](https://github.com/langchain-ai/docs/issues/new/choose).
-</Callout>
 <Callout icon="terminal-2">
     [Connect these docs](/use-these-docs) to Claude, VSCode, and more via MCP for real-time answers.
+</Callout>
+<Callout icon="edit">
+    [Edit this page on GitHub](https://github.com/langchain-ai/docs/edit/main/src/oss/langgraph/streaming.mdx) or [file an issue](https://github.com/langchain-ai/docs/issues/new/choose).
 </Callout>
 </div>

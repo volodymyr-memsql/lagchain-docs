@@ -1,8 +1,13 @@
 ---
-title: "DirectoryLoader integration"
-description: "Integrate with the DirectoryLoader document loader using LangChain JavaScript."
+title: DirectoryLoader integration
+description: Integrate with the DirectoryLoader document loader using LangChain JavaScript.
+integration:
+  name: DirectoryLoader
 ---
 
+
+
+import LangchainCommunityUnmaintainedJs from '/snippets/javascript/oss/langchain-community-unmaintained-js.mdx';
 
 <Tip>
 **Compatibility**: Only available on Node.js.
@@ -53,6 +58,8 @@ pnpm add langchain @langchain/core
 ## Instantiation
 
 Now we can instantiate our model object and load documents:
+
+<LangchainCommunityUnmaintainedJs />
 
 ```typescript
 import { DirectoryLoader } from "@langchain/classic/document_loaders/fs/directory";
@@ -112,10 +119,10 @@ For detailed documentation of all `DirectoryLoader` features and configurations 
 ---
 
 <div className="source-links">
-<Callout icon="edit">
-    [Edit this page on GitHub](https://github.com/langchain-ai/docs/edit/main/src/oss/javascript/integrations/document_loaders/file_loaders/directory.mdx) or [file an issue](https://github.com/langchain-ai/docs/issues/new/choose).
-</Callout>
 <Callout icon="terminal-2">
     [Connect these docs](/use-these-docs) to Claude, VSCode, and more via MCP for real-time answers.
+</Callout>
+<Callout icon="edit">
+    [Edit this page on GitHub](https://github.com/langchain-ai/docs/edit/main/src/oss/javascript/integrations/document_loaders/file_loaders/directory.mdx) or [file an issue](https://github.com/langchain-ai/docs/issues/new/choose).
 </Callout>
 </div>

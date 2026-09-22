@@ -101,13 +101,13 @@ rss: true
     * [Structured output](/oss/javascript/langchain/structured-output): Added ability to manually set `strict` mode when using `providerStrategy` for structured output.
 
     ### `@langchain/openai`
-    * **New provider built-in tools:** Support for [file search](/oss/javascript/langchain/tools#file-search), [web search](/oss/javascript/langchain/tools#web-search), [code interpreter](/oss/javascript/langchain/tools#code-interpreter), [image generation](/oss/javascript/langchain/tools#image-generation), [computer use](/oss/javascript/langchain/tools#computer-use), [shell](/oss/javascript/langchain/tools#shell), and [MCP connector](/oss/javascript/langchain/tools#mcp) tools.
+    * **New provider built-in tools:** Support for file search, web search, code interpreter, image generation, computer use, shell, and MCP connector tools executed server-side by the provider. See [Server-side tool use](/oss/javascript/langchain/tools#server-side-tool-use) and the [OpenAI](/oss/javascript/integrations/chat/openai) chat integration.
     * **Content moderation:** New `moderateContent` option on `ChatOpenAI` for detecting and handling unsafe content.
     * Prefer responses API for GPT-5.2 Pro model.
 
     ## v1.3.0
     ### `@langchain/anthropic`
-    * **New provider built-in tools:** Support for [text editor](/oss/javascript/langchain/tools#text-editor), [web fetch](/oss/javascript/langchain/tools#web-fetch), [computer use](/oss/javascript/langchain/tools#computer-use-1), [tool search](/oss/javascript/langchain/tools#tool-search), and [MCP toolset](/oss/javascript/langchain/tools#mcp-toolset) tools.
+    * **New provider built-in tools:** Support for text editor, web fetch, computer use, tool search, and MCP toolset tools executed server-side by the provider. See [Server-side tool use](/oss/javascript/langchain/tools#server-side-tool-use) and the [Anthropic](/oss/javascript/integrations/chat/anthropic) chat integration.
     * Exposed `ChatAnthropicInput` type for improved type safety.
 
     ## v1.1.0
@@ -136,11 +136,11 @@ rss: true
 
     * [Model profiles](/oss/javascript/langchain/models#model-profiles): Chat models now expose supported features and capabilities through a `.profile` getter. These data are derived from [models.dev](https://models.dev), an open source project providing model capability data.
     * [Model retry middleware](/oss/javascript/langchain/middleware/built-in#model-retry): New middleware for automatically retrying failed model calls with configurable exponential backoff, improving agent reliability.
-    * [Content moderation middleware](/oss/javascript/langchain/middleware/built-in#content-moderation): OpenAI content moderation middleware for detecting and handling unsafe content in agent interactions. Supports checking user input, model output, and tool results.
+    * [Content moderation middleware](/oss/javascript/langchain/middleware/built-in#provider-specific-middleware): OpenAI content moderation middleware for detecting and handling unsafe content in agent interactions. Supports checking user input, model output, and tool results.
     * [Summarization middleware](/oss/javascript/langchain/middleware/built-in#summarization): Updated to support flexible trigger points using model profiles for context-aware summarization.
     * [Structured output](/oss/javascript/langchain/structured-output): `ProviderStrategy` support (native structured output) can now be inferred from model profiles.
     * [`SystemMessage` for `createAgent`](/oss/javascript/langchain/middleware/custom#dynamic-prompt): Support for passing `SystemMessage` instances directly to `createAgent`'s `systemPrompt` parameter and a new `concat` method for extending system messages. Enables advanced features like cache control and structured content blocks.
-    * [Dynamic system prompt middleware](/oss/javascript/langchain/agents#dynamic-system-prompt): Return values from `dynamicSystemPromptMiddleware` are now purely additive. When returning a [`SystemMessage`](https://reference.langchain.com/javascript/langchain-core/messages/SystemMessage) or `string`, they are merged with existing system messages rather than replacing them, making it easier to compose multiple middleware that modify the prompt.
+    * [Dynamic system prompt middleware](/oss/javascript/langchain/short-term-memory): Return values from `dynamicSystemPromptMiddleware` are now purely additive. When returning a [`SystemMessage`](https://reference.langchain.com/javascript/langchain-core/messages/SystemMessage) or `string`, they are merged with existing system messages rather than replacing them, making it easier to compose multiple middleware that modify the prompt.
     * **Compatibility improvements:** Fixed error handling for Zod v4 validation errors in structured output and tool schemas, ensuring detailed error messages are properly displayed.
 </Update>
 <Update label="Oct 20, 2025" tags={["langchain", "langgraph"]} rss={{ title: "Oct 20, 2025 - langchain" }}>
@@ -162,10 +162,10 @@ rss: true
 ---
 
 <div className="source-links">
-<Callout icon="edit">
-    [Edit this page on GitHub](https://github.com/langchain-ai/docs/edit/main/src/oss/javascript/releases/changelog.mdx) or [file an issue](https://github.com/langchain-ai/docs/issues/new/choose).
-</Callout>
 <Callout icon="terminal-2">
     [Connect these docs](/use-these-docs) to Claude, VSCode, and more via MCP for real-time answers.
+</Callout>
+<Callout icon="edit">
+    [Edit this page on GitHub](https://github.com/langchain-ai/docs/edit/main/src/oss/javascript/releases/changelog.mdx) or [file an issue](https://github.com/langchain-ai/docs/issues/new/choose).
 </Callout>
 </div>

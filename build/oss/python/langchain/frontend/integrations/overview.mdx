@@ -3,7 +3,7 @@ title: Overview
 description: Connect useStream to any React UI component library or generative UI framework
 ---
 
-[`useStream`](https://reference.langchain.com/javascript/langchain-react/index/useStream) is UI-agnostic. It returns plain reactive state with messages, tool calls, loading flags, and thread history that you wire to any visual layer you choose. These pages show how different libraries integrate with LangChain frontends, each with a different philosophy for building AI chat and generative UI.
+[`useStream`](https://reference.langchain.com/javascript/langchain-react/index/useStream) is UI-agnostic. It returns plain reactive state with messages, tool calls, loading flags, values, and thread metadata that you wire to any visual layer you choose. These pages show how different libraries integrate with LangChain frontends, each with a different philosophy for building AI chat and generative UI.
 
 ## Integrations
 
@@ -30,8 +30,8 @@ Each library fits a slightly different integration model. The choice depends on 
 | --- | --- | --- | --- | --- |
 | **Best for** | Full chat runtime plus structured generative UI | Chat with rich message types | Full-featured chat with minimal setup | Generated dashboards and reports |
 | **UI style** | CopilotKit chat shell + custom message renderers | Composable shadcn/ui components | Headless slots + default theme | Prebuilt component library with declarative DSL |
-| **Customisation** | Custom backend endpoint, agent context, and renderers | Edit source files directly | Override component slots | Theme via CSS custom properties |
-| **Streaming UX** | Runtime-managed chat stream with structured assistant payloads | Component-level progressive render | Built-in thread management | Hoisting — shell appears immediately, data fills in |
+| **Customization** | Custom backend endpoint, agent context, and renderers | Edit source files directly | Override component slots | Theme via CSS custom properties |
+| **Streaming UX** | Runtime-managed chat stream with structured assistant payloads | Component-level progressive render | Built-in thread management | Hoisting: shell appears immediately, data fills in |
 | **Tool calls** | Via CopilotKit runtime and custom renderers | `Tool` / `ToolHeader` / `ToolOutput` | Custom via message slots | Inline in the generated UI |
 | **Agent format** | Structured assistant responses plus optional Markdown | Any `stream.messages` | Any `stream.messages` | Agent outputs openui-lang text |
 
@@ -40,10 +40,10 @@ All four work well with LangChain agents, and the latter three also connect dire
 ---
 
 <div className="source-links">
-<Callout icon="edit">
-    [Edit this page on GitHub](https://github.com/langchain-ai/docs/edit/main/src/oss/langchain/frontend/integrations/overview.mdx) or [file an issue](https://github.com/langchain-ai/docs/issues/new/choose).
-</Callout>
 <Callout icon="terminal-2">
     [Connect these docs](/use-these-docs) to Claude, VSCode, and more via MCP for real-time answers.
+</Callout>
+<Callout icon="edit">
+    [Edit this page on GitHub](https://github.com/langchain-ai/docs/edit/main/src/oss/langchain/frontend/integrations/overview.mdx) or [file an issue](https://github.com/langchain-ai/docs/issues/new/choose).
 </Callout>
 </div>

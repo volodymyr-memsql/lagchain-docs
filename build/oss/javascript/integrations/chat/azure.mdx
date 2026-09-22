@@ -1,7 +1,14 @@
 ---
-title: "AzureChatOpenAI integration"
-sidebarTitle: "Chat"
-description: "Integrate with the AzureChatOpenAI chat model using LangChain JavaScript."
+title: AzureChatOpenAI integration
+sidebarTitle: Chat
+description: Integrate with the AzureChatOpenAI chat model using LangChain JavaScript.
+integration:
+  name: AzureChatOpenAI
+  npm: '@langchain/openai'
+  stream: true
+  tool_calling: true
+  structured_output: true
+  multimodal: true
 ---
 
 Azure OpenAI is a Microsoft Azure service that provides powerful language models from OpenAI.
@@ -47,7 +54,7 @@ AZURE_OPENAI_API_KEY=<YOUR_KEY>
 AZURE_OPENAI_API_VERSION="2024-02-01"
 ```
 
-If you want to get automated tracing of your model calls you can also set your [LangSmith](/langsmith/home) API key by uncommenting below:
+If you want to get automated tracing of your model calls you can also set your [LangSmith](/langsmith/observability) API key by uncommenting below:
 
 ```bash
 # export LANGSMITH_TRACING="true"
@@ -78,7 +85,7 @@ Now we can instantiate our model object and generate chat completions:
 import { AzureChatOpenAI } from "@langchain/openai"
 
 const llm = new AzureChatOpenAI({
-    model: "gpt-4.1",
+    model: "gpt-5.5",
     temperature: 0,
     maxTokens: undefined,
     maxRetries: 2,
@@ -257,10 +264,10 @@ For detailed documentation of all `AzureChatOpenAI` features and configurations 
 ---
 
 <div className="source-links">
-<Callout icon="edit">
-    [Edit this page on GitHub](https://github.com/langchain-ai/docs/edit/main/src/oss/javascript/integrations/chat/azure.mdx) or [file an issue](https://github.com/langchain-ai/docs/issues/new/choose).
-</Callout>
 <Callout icon="terminal-2">
     [Connect these docs](/use-these-docs) to Claude, VSCode, and more via MCP for real-time answers.
+</Callout>
+<Callout icon="edit">
+    [Edit this page on GitHub](https://github.com/langchain-ai/docs/edit/main/src/oss/javascript/integrations/chat/azure.mdx) or [file an issue](https://github.com/langchain-ai/docs/issues/new/choose).
 </Callout>
 </div>

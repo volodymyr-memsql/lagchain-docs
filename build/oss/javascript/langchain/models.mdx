@@ -2,8 +2,8 @@
 title: Models
 ---
 
-import ChatModelTabsPy from '/snippets/chat-model-tabs.mdx';
-import ChatModelTabsJS from '/snippets/chat-model-tabs-js.mdx';
+import ChatModelTabsPy from '/snippets/javascript/chat-model-tabs.mdx';
+import ChatModelTabsJS from '/snippets/javascript/chat-model-tabs-js.mdx';
 
 [LLMs](https://en.wikipedia.org/wiki/Large_language_model) are powerful AI tools that can interpret and generate text like humans. They're versatile enough to write content, translate languages, summarize, and answer questions without needing specialized training for each task.
 
@@ -20,9 +20,13 @@ The quality and capabilities of the model you choose directly impact your agent'
 
 LangChain's standard model interfaces give you access to many different provider integrations, which makes it easy to experiment with and switch between models to find the best fit for your use case.
 
-<Info>
-    For provider-specific integration information and capabilities, see the provider's [chat model page](/oss/javascript/integrations/chat).
-</Info>
+For provider-specific integration information and capabilities, see the provider's [chat model page](/oss/javascript/integrations/chat).
+
+<Tip>
+[LangSmith](/langsmith/observability) traces each model call so you can compare providers, inspect tool routing, and debug failures. Follow the [tracing quickstart](/langsmith/trace-with-langchain) to get set up.
+
+We recommend you also set up [LangSmith Engine](/langsmith/engine) which monitors your traces, detects issues, and proposes fixes.
+</Tip>
 
 ## Basic usage
 
@@ -45,9 +49,11 @@ const response = await model.invoke("Why do parrots talk?");
 See [`initChatModel`](https://reference.langchain.com/javascript/langchain/chat_models/universal/initChatModel) for more detail, including information on how to pass model [parameters](#parameters).
 
 
-### Supported models
+### Supported providers and models
 
-LangChain supports all major model providers, including OpenAI, Anthropic, Google, Azure, AWS Bedrock, and more. Each provider offers a variety of models with different capabilities. For a full list of supported models in LangChain, see the [integrations page](/oss/javascript/integrations/providers/overview).
+LangChain supports all major model providers through dedicated integration packages. Each provider package implements the same standard interface, so you can swap providers without rewriting application logic. New model names work immediately — no LangChain update required — because provider packages pass model names directly to the provider's API.
+
+Browse the [full list of supported providers](/oss/javascript/integrations/providers/overview), or see [Providers and models](/oss/javascript/concepts/providers-and-models) for a conceptual overview of how providers, packages, and model names work together in LangChain.
 
 ### Key methods
 
@@ -96,6 +102,8 @@ A chat model takes parameters that can be used to configure its behavior. The fu
 
 <ParamField body="maxRetries" type="number" default="6">
     The maximum number of attempts the system will make to resend a request if it fails due to issues like network timeouts or rate limits. Retries use exponential backoff with jitter. Network errors, rate limits (429), and server errors (5xx) are retried automatically. Client errors such as 401 (unauthorized) or 404 are not retried. For long-running [agent](/oss/javascript/deepagents/overview) tasks on unreliable networks, consider increasing this to 10–15.
+
+    On providers that support it, [model retry middleware](/oss/javascript/langchain/middleware/built-in#model-retry) takes over retries for the calls it wraps, and this value does not apply to them.
 </ParamField>
 
 
@@ -109,6 +117,29 @@ const model = await initChatModel(
 )
 ```
 
+
+### Connection resilience
+
+LangChain chat models automatically retry failed API requests with exponential backoff. By default, models retry up to **6 times** for network errors, rate limits (429), and server errors (5xx). Client errors like 401 (unauthorized) or 404 are not retried.
+
+
+
+You can adjust `maxRetries` and `timeout` when creating a model, then pass that instance to `createAgent`, `createDeepAgent`, or call it standalone:
+
+```typescript
+import { ChatAnthropic } from "@langchain/anthropic";
+
+const model = new ChatAnthropic({
+  model: "google_genai:gemini-3.6-flash",
+  maxRetries: 10, // Increase for unreliable networks (default: 6)
+  timeout: 120_000, // Milliseconds; increase for slow connections
+});
+```
+
+
+<Tip>
+    For long-running agent graphs on unreliable networks, consider higher `max_retries` (for example 10–15) and a [checkpointer](/oss/javascript/langgraph/persistence) so that progress is preserved across failures.
+</Tip>
 
 <Info>
     Each chat model integration may have additional params used to control provider-specific functionality.
@@ -169,7 +200,7 @@ console.log(response);  // AIMessage("J'adore créer des applications.")
 
 
 <Info>
-    If the return type of your invocation is a string, ensure that you are using a chat model as opposed to a LLM. Legacy, text-completion LLMs return strings directly. LangChain chat models are prefixed with "Chat", e.g., [`ChatOpenAI`](https://reference.langchain.com/javascript/langchain-openai/ChatOpenAI)(/oss/integrations/chat/openai).
+    If the return type of your invocation is a string, ensure that you are using a chat model as opposed to an LLM. Legacy, text-completion LLMs return strings directly. LangChain chat models are prefixed with "Chat", e.g., [`ChatOpenAI`](https://reference.langchain.com/javascript/langchain-openai/ChatOpenAI)(/oss/integrations/chat/openai).
 </Info>
 
 ### Stream
@@ -396,7 +427,7 @@ const getWeather = tool(
   },
 );
 
-const model = new ChatOpenAI({ model: "gpt-4.1" });
+const model = new ChatOpenAI({ model: "gpt-5.5" });
 const modelWithTools = model.bindTools([getWeather]);  // [!code highlight]
 
 const response = await modelWithTools.invoke("What's the weather like in Boston?");
@@ -476,7 +507,7 @@ Below, we show some common ways you can use tool calling.
         console.log(response.tool_calls)
         // [
         //   { name: 'get_weather', args: { location: 'Boston' }, id: 'call_1' },
-        //   { name: 'get_time', args: { location: 'Tokyo' }, id: 'call_2' }
+        //   { name: 'get_weather', args: { location: 'Tokyo' }, id: 'call_2' }
         // ]
 
 
@@ -707,7 +738,7 @@ It can be useful to return the raw [`AIMessage`](https://reference.langchain.com
     import * as z from "zod";
 
     const Actor = z.object({
-      name: str
+      name: z.string(),
       role: z.string(),
     });
 
@@ -758,7 +789,7 @@ Model profile data allow applications to work around model capabilities dynamica
 1. [Summarization middleware](/oss/javascript/langchain/middleware/built-in#summarization) can trigger summarization based on a model's context window size.
 2. [Structured output](/oss/javascript/langchain/structured-output) strategies in `createAgent` can be inferred automatically (e.g., by checking support for native structured output features).
 3. Model inputs can be gated based on supported [modalities](#multimodal) and maximum input tokens.
-4. The [Deep Agents CLI](/oss/javascript/deepagents/cli) filters the [interactive model switcher](/oss/javascript/deepagents/cli/providers#which-models-appear-in-the-switcher) to models whose profiles report `tool_calling` support and text I/O, and displays context window sizes and capability flags in the selector detail view.
+4. [Deep Agents Code](/oss/deepagents/code) filters the [interactive model switcher](/oss/deepagents/code/providers#which-models-appear-in-the-switcher) to models whose profiles report `tool_calling` support and text I/O, and displays context window sizes and capability flags in the selector detail view.
 
 <Accordion title="Modify profile data">
     Model profile data can be changed if it is missing, stale, or incorrect.
@@ -850,6 +881,8 @@ Many models are capable of performing multi-step reasoning to arrive at a conclu
 
 Depending on the model, you can sometimes specify the level of effort it should put into reasoning. Similarly, you can request that the model turn off reasoning entirely. This may take the form of categorical "tiers" of reasoning (e.g., `'low'` or `'high'`) or integer token budgets.
 
+
+
 For details, see the [integrations page](/oss/javascript/integrations/providers/overview) or [reference](https://reference.langchain.com/python/integrations/) for your respective chat model.
 
 
@@ -863,14 +896,14 @@ LangChain supports running models locally on your own hardware. This is useful f
 
 ### Prompt caching
 
-Many providers offer prompt caching features to reduce latency and cost on repeat processing of the same tokens. These features can be **implicit** or **explicit**:
+Many providers offer prompt caching features to reduce latency and cost on repeat processing of the same tokens. You can engage caching at three levels:
 
-- **Implicit prompt caching:** providers will automatically pass on cost savings if a request hits a cache. Examples: [OpenAI](/oss/javascript/integrations/chat/openai) and [Gemini](/oss/javascript/integrations/chat/google_generative_ai).
-- **Explicit caching:** providers allow you to manually indicate cache points for greater control or to guarantee cost savings. Examples:
+- **Implicit provider caching:** providers automatically pass on cost savings if a request hits a cache, with no configuration required. Examples: [OpenAI](/oss/javascript/integrations/chat/openai) and [Gemini](/oss/javascript/integrations/chat/google_generative_ai).
+- **Provider-level explicit controls:** providers let you manually indicate cache points for greater control or to guarantee cost savings. These mirror the underlying provider/API behavior. Examples:
     - [`ChatOpenAI`](https://reference.langchain.com/javascript/langchain-openai/ChatOpenAI) (via `prompt_cache_key`)
-    - Anthropic's [`AnthropicPromptCachingMiddleware`](/oss/javascript/integrations/chat/anthropic#prompt-caching)
+    - Anthropic content-block [`cache_control`](/oss/javascript/integrations/chat/anthropic#prompt-caching)
     - [Gemini](https://reference.langchain.com/python/integrations/langchain_google_genai/).
-    - [AWS Bedrock](/oss/javascript/integrations/chat/bedrock#prompt-caching)
+
 
 <Warning>
     Prompt caching is often only engaged above a minimum input token threshold. See [provider pages](/oss/javascript/integrations/chat) for details.
@@ -888,7 +921,7 @@ If a model invokes a tool server-side, the content of the response message will 
 ```typescript
 import { initChatModel } from "langchain";
 
-const model = await initChatModel("gpt-4.1-mini");
+const model = await initChatModel("gpt-5.4-mini");
 const modelWithTools = model.bindTools([{ type: "web_search" }])
 
 const message = await modelWithTools.invoke("What was a positive news story from today?");
@@ -898,6 +931,8 @@ console.log(message.contentBlocks);
 This represents a single conversational turn; there are no associated [ToolMessage](/oss/javascript/langchain/messages#tool-message) objects that need to be passed in as in client-side [tool-calling](#tool-calling).
 
 See the [integration page](/oss/javascript/integrations/chat) for your given provider for available tools and usage details.
+
+
 
 
 
@@ -946,7 +981,7 @@ Certain models can be configured to return token-level log probabilities represe
 
 ```typescript
 const model = new ChatOpenAI({
-    model: "gpt-4.1",
+    model: "gpt-5.5",
     logprobs: true,
 });
 
@@ -960,9 +995,7 @@ responseMessage.response_metadata.logprobs.content.slice(0, 5);
 
 A number of model providers return token usage information as part of the invocation response. When available, this information will be included on the [`AIMessage`](https://reference.langchain.com/javascript/langchain-core/messages/AIMessage) objects produced by the corresponding model. For more details, see the [messages](/oss/javascript/langchain/messages) guide.
 
-<Note>
-    Some provider APIs, notably OpenAI and Azure OpenAI chat completions, require users opt-in to receiving token usage data in streaming contexts. See the [streaming usage metadata](/oss/javascript/integrations/chat/openai#streaming-usage-metadata) section of the integration guide for details.
-</Note>
+
 
 
 
@@ -991,7 +1024,7 @@ const response = await model.invoke(
 
 
 These configuration values are particularly useful when:
-- Debugging with [LangSmith](/langsmith/home) tracing
+- Debugging with [LangSmith](/langsmith/observability) tracing
 - Implementing custom logging or monitoring
 - Controlling resource usage in production
 - Tracking invocations across complex pipelines
@@ -1029,13 +1062,56 @@ These configuration values are particularly useful when:
     See full [`RunnableConfig`](https://reference.langchain.com/javascript/langchain-core/runnables/RunnableConfig) reference for all supported attributes.
 </Tip>
 
+
+
+### Dynamic model selection
+
+Dynamic models are selected at <Tooltip tip="The execution environment of your agent, containing immutable configuration and contextual data that persists throughout the agent's execution (e.g., user IDs, session details, or application-specific configuration).">runtime</Tooltip> based on the current <Tooltip tip="The data that flows through your agent's execution, including messages, custom fields, and any information that needs to be tracked and potentially modified during processing (e.g., user preferences or tool usage stats).">state</Tooltip> and context. This enables sophisticated routing logic and cost optimization.
+
+
+To use a dynamic model, create middleware with `wrapModelCall` that modifies the model in the request:
+
+```ts
+import { ChatOpenAI } from "@langchain/openai";
+import { createAgent, createMiddleware } from "langchain";
+
+const basicModel = new ChatOpenAI({ model: "gpt-5.4-mini" });
+const advancedModel = new ChatOpenAI({ model: "gpt-5.5" });
+
+const dynamicModelSelection = createMiddleware({
+  name: "DynamicModelSelection",
+  wrapModelCall: (request, handler) => {
+    // Choose model based on conversation complexity
+    const messageCount = request.messages.length;
+
+    return handler({
+        ...request,
+        model: messageCount > 10 ? advancedModel : basicModel,
+    });
+  },
+});
+
+const agent = createAgent({
+  model: "gpt-5.4-mini", // Base model (used when messageCount ≤ 10)
+  tools: [],
+  middleware: [dynamicModelSelection],
+});
+```
+
+For more details on middleware and advanced patterns, see the [middleware documentation](/oss/javascript/langchain/middleware).
+
+
+<Tip>
+For model configuration details, see [Models](/oss/javascript/langchain/models). For dynamic model selection patterns, see [Dynamic model in middleware](/oss/javascript/langchain/middleware#dynamic-model).
+</Tip>
+
 ---
 
 <div className="source-links">
-<Callout icon="edit">
-    [Edit this page on GitHub](https://github.com/langchain-ai/docs/edit/main/src/oss/langchain/models.mdx) or [file an issue](https://github.com/langchain-ai/docs/issues/new/choose).
-</Callout>
 <Callout icon="terminal-2">
     [Connect these docs](/use-these-docs) to Claude, VSCode, and more via MCP for real-time answers.
+</Callout>
+<Callout icon="edit">
+    [Edit this page on GitHub](https://github.com/langchain-ai/docs/edit/main/src/oss/langchain/models.mdx) or [file an issue](https://github.com/langchain-ai/docs/issues/new/choose).
 </Callout>
 </div>

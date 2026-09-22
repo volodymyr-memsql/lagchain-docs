@@ -1,7 +1,11 @@
 ---
-title: "AzureOpenAIEmbeddings integration"
-sidebarTitle: "Embeddings"
-description: "Integrate with the AzureOpenAIEmbeddings embedding model using LangChain JavaScript."
+title: AzureOpenAIEmbeddings integration
+sidebarTitle: Embeddings
+description: Integrate with the AzureOpenAIEmbeddings embedding model using LangChain
+  JavaScript.
+integration:
+  name: AzureOpenAIEmbeddings
+  npm: '@langchain/openai'
 ---
 
 [Azure OpenAI](https://azure.microsoft.com/products/ai-services/openai-service/) is a cloud service to help you quickly develop generative AI experiences with a diverse set of prebuilt and curated models from OpenAI, Meta and beyond.
@@ -49,7 +53,7 @@ AZURE_OPENAI_API_KEY=<YOUR_KEY>
 AZURE_OPENAI_API_VERSION="2024-02-01"
 ```
 
-If you want to get automated tracing of your model calls you can also set your [LangSmith](/langsmith/home) API key by uncommenting below:
+If you want to get automated tracing of your model calls you can also set your [LangSmith](/langsmith/observability) API key by uncommenting below:
 
 ```bash
 # export LANGSMITH_TRACING="true"
@@ -344,10 +348,10 @@ For detailed documentation of all `AzureOpenAIEmbeddings` features and configura
 ---
 
 <div className="source-links">
-<Callout icon="edit">
-    [Edit this page on GitHub](https://github.com/langchain-ai/docs/edit/main/src/oss/javascript/integrations/embeddings/azure_openai.mdx) or [file an issue](https://github.com/langchain-ai/docs/issues/new/choose).
-</Callout>
 <Callout icon="terminal-2">
     [Connect these docs](/use-these-docs) to Claude, VSCode, and more via MCP for real-time answers.
+</Callout>
+<Callout icon="edit">
+    [Edit this page on GitHub](https://github.com/langchain-ai/docs/edit/main/src/oss/javascript/integrations/embeddings/azure_openai.mdx) or [file an issue](https://github.com/langchain-ai/docs/issues/new/choose).
 </Callout>
 </div>

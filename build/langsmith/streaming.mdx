@@ -6,7 +6,7 @@ sidebarTitle: Streaming API
 The [LangGraph SDK](/langsmith/langgraph-python-sdk) lets you stream outputs from the [LangSmith Deployment API](/langsmith/server-api-ref) in multiple modes, from full state snapshots after each step to token-by-token LLM output. Thread streaming also supports resumability: if a connection drops, reconnect with the last event ID to pick up where you left off.
 
 <Note>
-LangGraph SDK and Agent Server are a part of [LangSmith](/langsmith/home).
+LangGraph SDK and Agent Server are a part of [LangSmith](/langsmith/observability).
 </Note>
 
 ## Basic usage
@@ -650,7 +650,7 @@ The streamed output from [`messages-tuple` mode](#supported-stream-modes) is a t
         topic: str
         joke: str = ""
 
-    model = init_chat_model(model="gpt-4.1-mini")
+    model = init_chat_model(model="gpt-5.4-mini")
 
     def call_model(state: MyState):
         """Call the LLM to generate a joke about a topic"""
@@ -1052,15 +1052,15 @@ Thread streams support resumability via the `Last-Event-ID` header. If the conne
 
 ## API reference
 
-For API usage and implementation, refer to the [API reference](/langsmith/server-api-ref#tag/thread-runs/POST/threads/{thread_id}/runs/stream).
+For API usage and implementation, refer to the [API reference](/langsmith/server-api-ref).
 
 ---
 
 <div className="source-links">
-<Callout icon="edit">
-    [Edit this page on GitHub](https://github.com/langchain-ai/docs/edit/main/src/langsmith/streaming.mdx) or [file an issue](https://github.com/langchain-ai/docs/issues/new/choose).
-</Callout>
 <Callout icon="terminal-2">
     [Connect these docs](/use-these-docs) to Claude, VSCode, and more via MCP for real-time answers.
+</Callout>
+<Callout icon="edit">
+    [Edit this page on GitHub](https://github.com/langchain-ai/docs/edit/main/src/langsmith/streaming.mdx) or [file an issue](https://github.com/langchain-ai/docs/issues/new/choose).
 </Callout>
 </div>

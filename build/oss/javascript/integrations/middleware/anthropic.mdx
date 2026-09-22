@@ -1,6 +1,10 @@
 ---
-title: "Anthropic integration"
-description: "Integrate with the Anthropic middleware using LangChain JavaScript."
+title: Anthropic integration
+description: Integrate with the Anthropic middleware using LangChain JavaScript.
+integration:
+  name: Anthropic
+  available: Prompt caching
+  source: "[`langchain-ai/langchainjs`](https://github.com/langchain-ai/langchainjs/tree/main/libs/langchain/src/agents/middleware/provider/anthropic)"
 ---
 
 Middleware specifically designed for Anthropic's Claude models. Learn more about [middleware](/oss/javascript/langchain/middleware/overview).
@@ -21,7 +25,7 @@ Prompt caching is useful for the following:
 - High-volume deployments where reducing API costs and latency is critical
 
 <Tip>
-    For simpler use cases, you can also use [automatic caching](/oss/javascript/integrations/chat/anthropic#automatic-caching) by passing `cache_control` at invocation time without middleware. The middleware is recommended when you need explicit control over cache breakpoints on system prompts and tool definitions.
+    For simpler use cases, you can also use [prompt caching](/oss/javascript/integrations/chat/anthropic#prompt-caching) on the chat model by passing `cache_control` at invocation time without middleware. The middleware is recommended when you need explicit control over cache breakpoints on system prompts and tool definitions.
 </Tip>
 
 <Info>
@@ -87,10 +91,10 @@ const result = await agent.invoke({
 ---
 
 <div className="source-links">
-<Callout icon="edit">
-    [Edit this page on GitHub](https://github.com/langchain-ai/docs/edit/main/src/oss/javascript/integrations/middleware/anthropic.mdx) or [file an issue](https://github.com/langchain-ai/docs/issues/new/choose).
-</Callout>
 <Callout icon="terminal-2">
     [Connect these docs](/use-these-docs) to Claude, VSCode, and more via MCP for real-time answers.
+</Callout>
+<Callout icon="edit">
+    [Edit this page on GitHub](https://github.com/langchain-ai/docs/edit/main/src/oss/javascript/integrations/middleware/anthropic.mdx) or [file an issue](https://github.com/langchain-ai/docs/issues/new/choose).
 </Callout>
 </div>

@@ -12,6 +12,10 @@ LangSmith provides tools for managing and working with your [_datasets_](/langsm
 
 You'll also learn how to [export filtered traces](#export-filtered-traces-from-experiment-to-dataset) from [experiments](/langsmith/evaluation-concepts#experiment) back to datasets for further analysis and iteration.
 
+<Tip>
+  The [LangSmith Engine](/langsmith/engine) can automatically generate ground truth dataset examples from your production traces.
+</Tip>
+
 ## Version a dataset
 
 In LangSmith, datasets are versioned. This means that every time you add, update, or delete examples in your dataset, a new version of the dataset is created.
@@ -59,7 +63,7 @@ client.update_dataset_tag(
 )
 ```
 
-To run an evaluation on a particular tagged version of a dataset, refer to the [Evaluate on a specific dataset version section](#evaluate-on-specific-dataset-version).
+To run an evaluation on a particular tagged version of a dataset, refer to the [Evaluate on a specific dataset version section](#evaluate-on-a-specific-dataset-version).
 
 ## Evaluate on a specific dataset version
 
@@ -278,10 +282,10 @@ After applying the filter on the project, we can multi-select runs to add to the
 ---
 
 <div className="source-links">
-<Callout icon="edit">
-    [Edit this page on GitHub](https://github.com/langchain-ai/docs/edit/main/src/langsmith/manage-datasets.mdx) or [file an issue](https://github.com/langchain-ai/docs/issues/new/choose).
-</Callout>
 <Callout icon="terminal-2">
     [Connect these docs](/use-these-docs) to Claude, VSCode, and more via MCP for real-time answers.
+</Callout>
+<Callout icon="edit">
+    [Edit this page on GitHub](https://github.com/langchain-ai/docs/edit/main/src/langsmith/manage-datasets.mdx) or [file an issue](https://github.com/langchain-ai/docs/issues/new/choose).
 </Callout>
 </div>

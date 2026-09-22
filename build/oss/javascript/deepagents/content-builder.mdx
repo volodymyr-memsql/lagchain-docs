@@ -4,12 +4,12 @@ sidebarTitle: Content Builder
 description: Build a content writing agent with brand memory, skills, subagents, and image generation
 ---
 
-import ContentBuilderToolsPy from '/snippets/code-samples/content-builder-tools-py.mdx';
-import ContentBuilderCreateAgentPy from '/snippets/code-samples/content-builder-create-agent-py.mdx';
-import ContentBuilderEntryPointPy from '/snippets/code-samples/content-builder-entry-point-py.mdx';
-import ContentBuilderToolsJs from '/snippets/code-samples/content-builder-tools-js.mdx';
-import ContentBuilderCreateAgentJs from '/snippets/code-samples/content-builder-create-agent-js.mdx';
-import ContentBuilderEntryPointJs from '/snippets/code-samples/content-builder-entry-point-js.mdx';
+import ContentBuilderToolsPy from '/snippets/javascript/code-samples/content-builder-tools-py.mdx';
+import ContentBuilderCreateAgentPy from '/snippets/javascript/code-samples/content-builder-create-agent-py.mdx';
+import ContentBuilderEntryPointPy from '/snippets/javascript/code-samples/content-builder-entry-point-py.mdx';
+import ContentBuilderToolsJs from '/snippets/javascript/code-samples/content-builder-tools-js.mdx';
+import ContentBuilderCreateAgentJs from '/snippets/javascript/code-samples/content-builder-create-agent-js.mdx';
+import ContentBuilderEntryPointJs from '/snippets/javascript/code-samples/content-builder-entry-point-js.mdx';
 
 ## Overview
 
@@ -28,7 +28,7 @@ The code in this tutorial wires in image generation tools and a filesystem backe
 
 This tutorial covers:
 
-- [Long-term memory](/oss/javascript/deepagents/long-term-memory) for TODO
+- [Long-term memory](/oss/javascript/deepagents/memory) for TODO
 - [Skills](/oss/javascript/deepagents/skills) for TODO
 - [Subagents](/oss/javascript/deepagents/subagents) for TODO
 - [Filesystem backends](/oss/javascript/deepagents/backends) for file read and write
@@ -38,10 +38,10 @@ This tutorial covers:
 
 API keys:
 
-- Anthropic (Claude)
+- Anthropic (Claude) or other provider API key
 - Google (Gemini) for image generation with `gemini-2.5-flash-image`
 - [Tavily](https://www.tavily.com/) for web search (free tier)
-- [LangSmith](https://smith.langchain.com/) for tracing (optional)
+- [LangSmith](https://smith.langchain.com?utm_source=docs&utm_medium=cta&utm_campaign=langsmith-signup&utm_content=oss-deepagents-content-builder) for tracing (optional)
 
 
 
@@ -100,7 +100,7 @@ The example keeps behavior in three kinds of files: memory, skills, and subagent
 <Step title="Add AGENTS.md">
 
 Create `AGENTS.md` in the project root.
-When you later create the agent and specify this file as part of the [memory](/oss/javascript/deepagents/long-term-memory) parameter, it gets loaded this into the system prompt so brand voice and research expectations apply to every run.
+When you later create the agent and specify this file as part of the [memory](/oss/javascript/deepagents/memory) parameter, it gets loaded this into the system prompt so brand voice and research expectations apply to every run.
 
 ```markdown expandable wrap
 # Content Writer Agent
@@ -487,7 +487,7 @@ Before finishing:
 
 They instruct the agent to call the `researcher` subagent first, write markdown under `blogs/`, `linkedin/`, or `tweets/`, and call `generate_cover` or `generate_social_image` for images.
 
-When you later create the agent and specify the skills folder(s), then the frontmatter of the `SKILLS.md` files from those skill folders get loaded this into the system prompt so the agent can use the skill when a task task matches a skill description.
+When you later create the agent and specify the skills folder(s), then the frontmatter of the `SKILLS.md` files from those skill folders get loaded this into the system prompt so the agent can use the skill when a task matches a skill description.
 
 </Step>
 </Steps>
@@ -551,7 +551,7 @@ npx tsx content_writer.ts Write a blog post about prompt engineering
 ```
 
 
-With `LANGSMITH_API_KEY` set, you can inspect runs in [LangSmith](/langsmith/home).
+With `LANGSMITH_API_KEY` set, you can inspect runs in [LangSmith](/langsmith/observability).
 
 ## Output
 
@@ -585,10 +585,10 @@ Browse the complete [content-builder-agent example](https://github.com/langchain
 ---
 
 <div className="source-links">
-<Callout icon="edit">
-    [Edit this page on GitHub](https://github.com/langchain-ai/docs/edit/main/src/oss/deepagents/content-builder.mdx) or [file an issue](https://github.com/langchain-ai/docs/issues/new/choose).
-</Callout>
 <Callout icon="terminal-2">
     [Connect these docs](/use-these-docs) to Claude, VSCode, and more via MCP for real-time answers.
+</Callout>
+<Callout icon="edit">
+    [Edit this page on GitHub](https://github.com/langchain-ai/docs/edit/main/src/oss/deepagents/content-builder.mdx) or [file an issue](https://github.com/langchain-ai/docs/issues/new/choose).
 </Callout>
 </div>

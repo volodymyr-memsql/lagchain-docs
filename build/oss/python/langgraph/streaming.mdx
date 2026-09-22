@@ -2,10 +2,14 @@
 title: Streaming
 ---
 
-import NostreamTagPy from '/snippets/code-samples/nostream-tag-py.mdx';
-import NostreamTagJs from '/snippets/code-samples/nostream-tag-js.mdx';
+import NostreamTagPy from '/snippets/python/code-samples/nostream-tag-py.mdx';
+import NostreamTagJs from '/snippets/python/code-samples/nostream-tag-js.mdx';
 
-LangGraph implements a streaming system to surface real-time updates. Streaming is crucial for enhancing the responsiveness of applications built on LLMs. By displaying output progressively, even before a complete response is ready, streaming significantly improves user experience (UX), particularly when dealing with the latency of LLMs.
+<Tip>
+For new applications, we recommend [event streaming](/oss/python/langgraph/event-streaming)—the typed-projection API introduced in LangGraph v1.2. Event streaming gives you separate iterators per projection (messages, values, subgraphs, output) so you can consume them independently instead of branching on `stream_mode` chunks.
+</Tip>
+
+This page covers LangGraph's stream-mode API. It exposes graph execution through stream modes such as `updates`, `values`, `messages`, `custom`, `checkpoints`, `tasks`, and `debug`. Use it when you need direct access to graph-runtime events or specific stream-mode output.
 
 ## Get started
 
@@ -77,10 +81,14 @@ Node generate_joke updated: {'joke': 'Why did the ice cream go to school? To get
 
 
 
+<Tip>
+Debug streaming events, inspect token-by-token LLM output, and monitor latency with [LangSmith](https://smith.langchain.com?utm_source=docs&utm_medium=cta&utm_campaign=langsmith-signup&utm_content=oss-langgraph-streaming). Follow the [tracing quickstart](/langsmith/trace-with-langgraph) to get set up.
+</Tip>
+
 ### Stream output format (v2)
 
 <Note>
-Requires LangGraph >= 1.1. All examples on this page use `version="v2"`.
+Requires LangGraph 1.1 or later. All examples on this page use `version="v2"`.
 </Note>
 
 Pass `version="v2"` to `stream()` or `astream()` to get a unified output format. Every chunk is a `StreamPart` dict with a consistent shape — regardless of stream mode, number of modes, or subgraph settings:
@@ -268,7 +276,7 @@ class MyState:
     joke: str = ""
 
 
-model = init_chat_model(model="gpt-4.1-mini")
+model = init_chat_model(model="gpt-5.4-mini")
 
 def call_model(state: MyState):
     """Call the LLM to generate a joke about a topic"""
@@ -311,9 +319,9 @@ You can associate `tags` with LLM invocations to filter the streamed tokens by L
 from langchain.chat_models import init_chat_model
 
 # model_1 is tagged with "joke"
-model_1 = init_chat_model(model="gpt-4.1-mini", tags=['joke'])
+model_1 = init_chat_model(model="gpt-5.4-mini", tags=['joke'])
 # model_2 is tagged with "poem"
-model_2 = init_chat_model(model="gpt-4.1-mini", tags=['poem'])
+model_2 = init_chat_model(model="gpt-5.4-mini", tags=['poem'])
 
 graph = ... # define a graph that uses these LLMs
 
@@ -343,9 +351,9 @@ async for chunk in graph.astream(
   from langgraph.graph import START, StateGraph
 
   # The joke_model is tagged with "joke"
-  joke_model = init_chat_model(model="gpt-4.1-mini", tags=["joke"])
+  joke_model = init_chat_model(model="gpt-5.4-mini", tags=["joke"])
   # The poem_model is tagged with "poem"
-  poem_model = init_chat_model(model="gpt-4.1-mini", tags=["poem"])
+  poem_model = init_chat_model(model="gpt-5.4-mini", tags=["poem"])
 
 
   class State(TypedDict):
@@ -441,7 +449,7 @@ for chunk in graph.stream(
   from langgraph.graph import START, StateGraph
   from langchain_openai import ChatOpenAI
 
-  model = ChatOpenAI(model="gpt-4.1-mini")
+  model = ChatOpenAI(model="gpt-5.4-mini")
 
 
   class State(TypedDict):
@@ -582,7 +590,7 @@ To include outputs from [subgraphs](/oss/python/langgraph/use-subgraphs) in the 
 The outputs will be streamed as tuples `(namespace, data)`, where `namespace` is a tuple with the path to the node where a subgraph is invoked, e.g. `("parent_node:<task_id>", "child_node:<task_id>")`.
 
 <Tabs>
-    <Tab title="v2 (LangGraph >= 1.1)">
+    <Tab title="v2 (LangGraph 1.1 or later)">
     With `version="v2"`, subgraph events use the same `StreamPart` format. The `ns` field identifies the source:
 
     ```python
@@ -609,6 +617,36 @@ The outputs will be streamed as tuples `(namespace, data)`, where `namespace` is
     ```
     </Tab>
 </Tabs>
+
+
+
+
+<Note>
+    This applies to every `stream_mode`, including `"messages"`. Agent builders like [`create_agent`](https://reference.langchain.com/python/langchain/agents/factory/create_agent) return a **compiled graph**, so adding one as a node turns it into a subgraph. Without `subgraphs=True`, `stream_mode="messages"` on the parent graph will not emit token chunks from the inner agent's LLM calls. Invoking `agent.stream(...)` directly will, which is why this often shows up only after wrapping.
+
+    ```python
+    from langchain.agents import create_agent
+    from langgraph.graph import END, START, StateGraph
+
+    graph = (
+        StateGraph(State)
+        .add_node("agent", create_agent(model, tools, state_schema=State))
+        .add_edge(START, "agent")
+        .add_edge("agent", END)
+        .compile()
+    )
+
+    for chunk in graph.stream(
+        {"messages": [{"role": "user", "content": "..."}]},
+        stream_mode="messages",
+        subgraphs=True,  # [!code highlight]
+        version="v2",
+    ):
+        print(chunk["type"])  # "messages"
+        print(chunk["ns"])    # () for root, ("agent:<task_id>",) for subgraph
+        print(chunk["data"])  # (token, metadata)
+    ```
+</Note>
 
 
 
@@ -840,7 +878,7 @@ for chunk in graph.stream(
   from openai import AsyncOpenAI
 
   openai_client = AsyncOpenAI()
-  model_name = "gpt-4.1-mini"
+  model_name = "gpt-5.4-mini"
 
 
   async def stream_tokens(model_name: str, messages: list[dict]):
@@ -976,7 +1014,7 @@ Set `streaming=False` when initializing the model.
     from langchain_openai import ChatOpenAI
 
     # Set streaming=False to disable streaming for the chat model
-    model = ChatOpenAI(model="o1-preview", streaming=False)
+    model = ChatOpenAI(model="gpt-5.5", streaming=False)
     ```
     </Tab>
 </Tabs>
@@ -1082,7 +1120,7 @@ This limits LangGraph ability to automatically propagate context, and affects La
   from langgraph.graph import START, StateGraph
   from langchain.chat_models import init_chat_model
 
-  model = init_chat_model(model="gpt-4.1-mini")
+  model = init_chat_model(model="gpt-5.4-mini")
 
   class State(TypedDict):
       topic: str
@@ -1155,10 +1193,10 @@ This limits LangGraph ability to automatically propagate context, and affects La
 ---
 
 <div className="source-links">
-<Callout icon="edit">
-    [Edit this page on GitHub](https://github.com/langchain-ai/docs/edit/main/src/oss/langgraph/streaming.mdx) or [file an issue](https://github.com/langchain-ai/docs/issues/new/choose).
-</Callout>
 <Callout icon="terminal-2">
     [Connect these docs](/use-these-docs) to Claude, VSCode, and more via MCP for real-time answers.
+</Callout>
+<Callout icon="edit">
+    [Edit this page on GitHub](https://github.com/langchain-ai/docs/edit/main/src/oss/langgraph/streaming.mdx) or [file an issue](https://github.com/langchain-ai/docs/issues/new/choose).
 </Callout>
 </div>

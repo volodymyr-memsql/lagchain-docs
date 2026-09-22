@@ -5,8 +5,14 @@ description: Add persistent memory to agents built with Deep Agents so they lear
 
 Memory lets your agent learn and improve across conversations. Deep Agents makes memory first class with filesystem-backed memory: the agent reads and writes memory as files, and you control where those files are stored using [backends](/oss/javascript/deepagents/backends).
 
+<Tip>
+To generate a repository wiki that coding agents discover through [`AGENTS.md`](https://agents.md/), see [OpenWiki](/oss/openwiki/overview).
+</Tip>
+
 <Note>
 This page covers **long-term memory**: memory that persists across conversations. For short-term memory (conversation history and scratch files within a single session), see the [context engineering](/oss/javascript/deepagents/context-engineering) guide. Short-term memory is managed automatically as part of the agent's [state](/oss/javascript/langgraph/graph-api#state).
+
+![Short-term memory is scoped to a single thread via checkpoints; long-term memory persists across threads via the store](/oss/images/deepagents/production/memory.png)
 </Note>
 
 ## How memory works
@@ -16,6 +22,8 @@ This page covers **long-term memory**: memory that persists across conversations
 3. **Agent updates memory (optional).** When the agent learns new information, it can use its built-in `edit_file` tool to update memory files. Updates can happen during the conversation (the default) or in the background between conversations via [background consolidation](#background-consolidation). Changes are persisted and available in the next conversation. Not all memory is writable: developer-defined [skills](/oss/javascript/deepagents/skills) and [organization policies](#organization-level-memory) are typically read-only. See [read-only vs writable memory](#read-only-vs-writable-memory) for details.
 
 The two most common patterns are [agent-scoped memory](#agent-scoped-memory) (shared across all users) and [user-scoped memory](#user-scoped-memory) (isolated per user).
+
+For a generated repository wiki that coding agents discover through [`AGENTS.md`](https://agents.md/), see [OpenWiki](/oss/openwiki/overview).
 
 ## Scoped memory
 
@@ -30,7 +38,7 @@ The key is the backend namespace: setting it to `(assistant_id,)` means every co
 
 
 <Note>
-Accessing `ctx.runtime.serverInfo` requires `deepagents>=1.9.0`. On older versions, read the assistant ID from `getConfig().metadata.assistantId` instead.
+Accessing `rt.serverInfo` requires `deepagents>=1.9.0`. On older versions, read the assistant ID from `getConfig().metadata.assistantId` instead.
 </Note>
 
 
@@ -46,10 +54,10 @@ const agent = createDeepAgent({
     new StateBackend(),
     {
       "/memories/": new StoreBackend({
-        namespace: (ctx) => [ctx.runtime.serverInfo.assistantId],  // [!code highlight]
+        namespace: (rt) => [rt.serverInfo.assistantId],  // [!code highlight]
       }),
       "/skills/": new StoreBackend({
-        namespace: (ctx) => [ctx.runtime.serverInfo.assistantId],  // [!code highlight]
+        namespace: (rt) => [rt.serverInfo.assistantId],  // [!code highlight]
       }),
     },
   ),
@@ -64,7 +72,6 @@ Populate the store with initial memories, then invoke the agent across two threa
 
 
 ```typescript
-import { v4 as uuidv4 } from "uuid";
 import { createDeepAgent, CompositeBackend, StateBackend, StoreBackend, createFileData } from "deepagents";
 import { InMemoryStore } from "@langchain/langgraph";
 
@@ -102,10 +109,10 @@ const agent = createDeepAgent({
     new StateBackend(rt),
     {
       "/memories/": new StoreBackend(rt, {
-        namespace: (ctx) => ["my-agent"],
+        namespace: (rt) => ["my-agent"],
       }),
       "/skills/": new StoreBackend(rt, {
-        namespace: (ctx) => ["my-agent"],
+        namespace: (rt) => ["my-agent"],
       }),
     },
   ),
@@ -113,13 +120,13 @@ const agent = createDeepAgent({
 });
 
 // Thread 1: the agent learns a new preference and saves it to memory
-const config1 = { configurable: { thread_id: uuidv4() } };
+const config1 = { configurable: { thread_id: crypto.randomUUID() } };
 await agent.invoke({
   messages: [{ role: "user", content: "I prefer detailed explanations. Remember that." }],
 }, config1);
 
 // Thread 2: the agent reads memory and applies the preference
-const config2 = { configurable: { thread_id: uuidv4() } };
+const config2 = { configurable: { thread_id: crypto.randomUUID() } };
 await agent.invoke({
   messages: [{ role: "user", content: "Explain how transformers work." }],
 }, config2);
@@ -146,10 +153,10 @@ const agent = createDeepAgent({
     new StateBackend(),
     {
       "/memories/": new StoreBackend({
-        namespace: (ctx) => [ctx.runtime.context.userId],
+        namespace: (rt) => [rt.serverInfo.user.identity],
       }),
       "/skills/": new StoreBackend({
-        namespace: (ctx) => [ctx.runtime.context.userId],
+        namespace: (rt) => [rt.serverInfo.user.identity],
       }),
     },
   ),
@@ -164,14 +171,8 @@ Seed per-user memories and invoke the agent as two different users. Each user se
 
 
 ```typescript
-import { v4 as uuidv4 } from "uuid";
-import { z } from "zod";
 import { createDeepAgent, CompositeBackend, StateBackend, StoreBackend, createFileData } from "deepagents";
 import { InMemoryStore } from "@langchain/langgraph";
-
-const contextSchema = z.object({
-  userId: z.string(),
-});
 
 const store = new InMemoryStore();  // Use platform store when deploying to LangSmith
 
@@ -211,33 +212,26 @@ Use the fetch_url tool to read https://docs.langchain.com/llms.txt, then fetch r
 const agent = createDeepAgent({
   memory: ["/memories/preferences.md"],
   skills: ["/skills/"],
-  contextSchema,
   backend: (rt) => new CompositeBackend(
     new StateBackend(rt),
     {
       "/memories/": new StoreBackend(rt, {
-        namespace: (ctx) => [ctx.runtime.context.userId],
+        namespace: (rt) => [rt.serverInfo.user.identity],
       }),
       "/skills/": new StoreBackend(rt, {
-        namespace: (ctx) => [ctx.runtime.context.userId],
+        namespace: (rt) => [rt.serverInfo.user.identity],
       }),
     },
   ),
   store,
 });
 
-// Alice's conversation — agent sees her preferences
+// When deployed, each authenticated request resolves
+// `rt.serverInfo.user.identity` to the calling user, so Alice and Bob
+// automatically see only their own preferences.
 await agent.invoke(
   { messages: [{ role: "user", content: "How do I read a CSV file?" }] },
-  { configurable: { thread_id: uuidv4() } },
-  { context: { userId: "user-alice" } },
-);
-
-// Bob's conversation — agent sees his preferences, not Alice's
-await agent.invoke(
-  { messages: [{ role: "user", content: "How do I read a CSV file?" }] },
-  { configurable: { thread_id: uuidv4() } },
-  { context: { userId: "user-bob" } },
+  { configurable: { thread_id: crypto.randomUUID() } },
 );
 ```
 
@@ -250,7 +244,7 @@ On top of the basic configuration options for memory paths and scope, you can al
 
 | Dimension | Question it answers | Options |
 |---|---|---|
-| **Duration** | How long does it last? | [Short-term](/oss/javascript/deepagents/context-engineering) (single conversation) or [long-term](#quick-start) (across conversations) |
+| **Duration** | How long does it last? | [Short-term](/oss/javascript/deepagents/context-engineering) (single conversation) or [long-term](#scoped-memory) (across conversations) |
 | **Information type** | What kind of information is it? | [Episodic](#episodic-memory) (past experiences), [procedural](/oss/javascript/deepagents/skills) (instructions and skills), or [semantic](/oss/javascript/concepts/memory#semantic-memory) (facts) |
 | **Scope** | Who can see and modify it? | [User](#user-scoped-memory), [agent](#agent-scoped-memory), or [organization](#organization-level-memory) |
 | **Update strategy** | When are memories written? | During conversation (default) or [between conversations](#background-consolidation) |
@@ -259,9 +253,9 @@ On top of the basic configuration options for memory paths and scope, you can al
 
 ### Episodic memory
 
-Episodic memory stores records of past experiences: what happened, in what order, and what the outcome was. Unlike semantic memory (facts and preferences stored in files like `AGENTS.md`), episodic memory preserves the full conversational context so the agent can recall *how* a problem was solved, not just *what* was learned from it.
+Episodic memory stores records of past experiences: what happened, in what order, and what the outcome was. Unlike semantic memory (facts and preferences stored in files like `AGENTS.md`), episodic memory preserves the full conversational context so the agent can recall *how* a problem was solved, not just *what* was learned from it. To generate and maintain a repository-level wiki for coding agents, see [OpenWiki](/oss/openwiki/overview).
 
-Deep Agents already use [checkpointers](/oss/javascript/langgraph/persistence#checkpoints) which is the mechanism that supports episodic memory: every conversation is persisted as a checkpointed thread.
+Deep Agents already use [checkpointers](/oss/javascript/langgraph/checkpointers#checkpoints) which is the mechanism that supports episodic memory: every conversation is persisted as a checkpointed thread.
 
 To make past conversations searchable, wrap thread search in a tool. The `user_id` is pulled from the runtime context rather than passed as a parameter:
 
@@ -336,10 +330,10 @@ const agent = createDeepAgent({
     new StateBackend(),
     {
       "/memories/": new StoreBackend({
-        namespace: (ctx) => [ctx.runtime.context.userId],
+        namespace: (rt) => [rt.serverInfo.user.identity],
       }),
       "/policies/": new StoreBackend({
-        namespace: (ctx) => [ctx.runtime.context.orgId],
+        namespace: (rt) => [rt.context.orgId],
       }),
     },
   ),
@@ -368,7 +362,7 @@ await client.store.putItem(
 ```
 
 
-Use [policy hooks](/oss/javascript/deepagents/backends#add-policy-hooks) to enforce that org-level memory is read-only.
+Use [permissions](/oss/javascript/deepagents/permissions) to enforce that org-level memory is read-only, or [policy hooks](/oss/javascript/deepagents/backends#add-policy-hooks) for custom validation logic.
 
 ### Background consolidation
 
@@ -420,7 +414,7 @@ const searchRecentConversations = tool(
 );
 
 const agent = createDeepAgent({
-  model: "claude-sonnet-4-6",
+  model: "google_genai:gemini-3.6-flash",
   systemPrompt: `Review recent conversations and update the user's memory file.
 Merge new facts, remove outdated information, and keep it concise.`,
   tools: [searchRecentConversations],
@@ -455,10 +449,10 @@ graph LR
     Cron[Cron schedule] -->|periodic| Agent[Consolidation agent]
     Agent -->|writes| Store
 
-    classDef trigger fill:#DCFCE7,stroke:#16A34A,stroke-width:2px,color:#14532D
-    classDef process fill:#DBEAFE,stroke:#2563EB,stroke-width:2px,color:#1E3A8A
-    classDef output fill:#F3E8FF,stroke:#9333EA,stroke-width:2px,color:#581C87
-    classDef schedule fill:#FEF3C7,stroke:#D97706,stroke-width:2px,color:#92400E
+    classDef trigger fill:#F6FFDB,stroke:#6E8900,stroke-width:2px,color:#2E3900
+    classDef process fill:#E5F4FF,stroke:#006DDD,stroke-width:2px,color:#030710
+    classDef output fill:#EBD0F0,stroke:#885270,stroke-width:2px,color:#441E33
+    classDef schedule fill:#FDF3FF,stroke:#7E65AE,stroke-width:2px,color:#504B5F
 
     class Conv1,Conv2 trigger
     class Agent process
@@ -502,7 +496,7 @@ By default, the agent can both read and write memory files. For shared state lik
 | Permission | Use case | How it works |
 |---|---|---|
 | **Read-write** (default) | User preferences, agent self-improvement, learned [skills](/oss/javascript/deepagents/skills) | Agent updates files via `edit_file` tool |
-| **Read-only** | Organization policies, compliance rules, shared knowledge bases, developer-defined [skills](/oss/javascript/deepagents/skills) | Populate via application code or the [Store API](/langsmith/custom-store). Use [policy hooks](/oss/javascript/deepagents/backends#add-policy-hooks) to block agent writes. |
+| **Read-only** | Organization policies, compliance rules, shared knowledge bases, developer-defined [skills](/oss/javascript/deepagents/skills) | Populate via application code or the [Store API](/langsmith/custom-store). Use [permissions](/oss/javascript/deepagents/permissions) to deny writes to specific paths, or [policy hooks](/oss/javascript/deepagents/backends#add-policy-hooks) for custom validation logic. |
 
 **Security considerations:** If one user can write to memory that another user reads, a malicious user could inject instructions into shared state. To mitigate this:
 
@@ -510,7 +504,7 @@ By default, the agent can both read and write memory files. For shared state lik
 - Use **read-only memory** for shared policies (populate via application code, not the agent)
 - Add **human-in-the-loop** validation before the agent writes to shared memory. Use an [interrupt](/oss/javascript/langgraph/interrupts) to require human approval for writes to sensitive paths.
 
-To enforce read-only memory, use [policy hooks](/oss/javascript/deepagents/backends#add-policy-hooks) on the backend to reject write operations to specific paths.
+To enforce read-only memory, use [permissions](/oss/javascript/deepagents/permissions) to declaratively deny writes to specific paths. For custom validation logic (rate limiting, audit logging, content inspection), use [backend policy hooks](/oss/javascript/deepagents/backends#add-policy-hooks).
 
 ### Concurrent writes
 
@@ -526,9 +520,9 @@ To give each agent its own memory in a shared deployment, add `assistant_id` to 
 
 ```typescript
 new StoreBackend({
-  namespace: (ctx) => [
-    ctx.runtime.serverInfo.assistantId,  // [!code highlight]
-    ctx.runtime.context.userId,
+  namespace: (rt) => [
+    rt.serverInfo.assistantId,  // [!code highlight]
+    rt.serverInfo.user.identity,
   ],
 })
 ```
@@ -540,13 +534,20 @@ Use `assistant_id` alone if you only need per-agent isolation without per-user s
 Use [LangSmith tracing](/langsmith/trace-with-langgraph) to audit what your agent writes to memory. Every file write appears as a tool call in the trace.
 </Tip>
 
+## See also
+
+- [OpenWiki](/oss/openwiki/overview): Generate and maintain repository wikis that coding agents find through `AGENTS.md`
+- [Backends](/oss/javascript/deepagents/backends): Choose where memory files are stored
+- [Context engineering](/oss/javascript/deepagents/context-engineering): Short-term memory, offloading, and summarization
+- [Skills](/oss/javascript/deepagents/skills): On-demand procedural memory
+
 ---
 
 <div className="source-links">
-<Callout icon="edit">
-    [Edit this page on GitHub](https://github.com/langchain-ai/docs/edit/main/src/oss/deepagents/memory.mdx) or [file an issue](https://github.com/langchain-ai/docs/issues/new/choose).
-</Callout>
 <Callout icon="terminal-2">
     [Connect these docs](/use-these-docs) to Claude, VSCode, and more via MCP for real-time answers.
+</Callout>
+<Callout icon="edit">
+    [Edit this page on GitHub](https://github.com/langchain-ai/docs/edit/main/src/oss/deepagents/memory.mdx) or [file an issue](https://github.com/langchain-ai/docs/issues/new/choose).
 </Callout>
 </div>

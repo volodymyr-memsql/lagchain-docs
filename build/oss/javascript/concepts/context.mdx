@@ -31,11 +31,10 @@ LangGraph provides three ways to manage context, which combines the mutability a
 
 | Context type                                                                                | Description                                   | Mutability | Lifetime           |
 | ------------------------------------------------------------------------------------------- | --------------------------------------------- | ---------- | ------------------ |
-| [**Config**](#config-static-context)                                                        | data passed at the start of a run             | Static     | Single run         |
-| [**Dynamic runtime context (state)**](#dynamic-runtime-context-state)                       | Mutable data that evolves during a single run | Dynamic    | Single run         |
-| [**Dynamic cross-conversation context (store)**](#dynamic-cross-conversation-context-store) | Persistent data shared across conversations   | Dynamic    | Cross-conversation |
+| [**Config**](#config)                                                                       | data passed at the start of a run             | Static     | Single run         |
+| [**Dynamic runtime context (state)**](#dynamic-runtime-context)                             | Mutable data that evolves during a single run | Dynamic    | Single run         |
+| [**Dynamic cross-conversation context (store)**](#dynamic-cross-conversation-context)       | Persistent data shared across conversations   | Dynamic    | Cross-conversation |
 
-<a id="static-context"></a>
 ## Config
 
 Config is for immutable data like user metadata or API keys. Use this when you have values that don't change mid-run.
@@ -50,7 +49,6 @@ await graph.invoke(
 ```
 
 
-<a id="state"></a>
 ## Dynamic runtime context
 
 **Dynamic runtime context** represents mutable data that can evolve during a single run and is managed through the LangGraph state object. This includes conversation history, intermediate results, and values derived from tools or LLM outputs. In LangGraph, the state object acts as [short-term memory](/oss/javascript/concepts/memory) during a run.
@@ -59,7 +57,9 @@ await graph.invoke(
     <Tab title="In an agent">
     Example shows how to incorporate state into an agent **prompt**.
 
-    State can also be accessed by the agent's **tools**, which can read or update the state as needed. See [tool calling guide](/oss/javascript/langchain/tools#short-term-memory) for details.
+
+    State can also be accessed by the agent's **tools**, which can read or update the state as needed. See [tool calling guide](/oss/javascript/langchain/tools#access-context) for details.
+
 
 
 
@@ -128,8 +128,6 @@ await graph.invoke(
     Please see the [memory guide](/oss/javascript/langgraph/add-memory) for more details on how to enable memory. This is a powerful feature that allows you to persist the agent's state across multiple invocations. Otherwise, the state is scoped only to a single run.
 </Tip>
 
-<a id="store"></a>
-
 ## Dynamic cross-conversation context
 
 **Dynamic cross-conversation context** represents persistent, mutable data that spans across multiple conversations or sessions and is managed through the LangGraph store. This includes user profiles, preferences, and historical interactions. The LangGraph store acts as [long-term memory](/oss/javascript/concepts/memory#long-term-memory) across multiple runs. This can be used to read or update persistent facts (e.g., user profiles, preferences, prior interactions).
@@ -143,10 +141,10 @@ await graph.invoke(
 ---
 
 <div className="source-links">
-<Callout icon="edit">
-    [Edit this page on GitHub](https://github.com/langchain-ai/docs/edit/main/src/oss/concepts/context.mdx) or [file an issue](https://github.com/langchain-ai/docs/issues/new/choose).
-</Callout>
 <Callout icon="terminal-2">
     [Connect these docs](/use-these-docs) to Claude, VSCode, and more via MCP for real-time answers.
+</Callout>
+<Callout icon="edit">
+    [Edit this page on GitHub](https://github.com/langchain-ai/docs/edit/main/src/oss/concepts/context.mdx) or [file an issue](https://github.com/langchain-ai/docs/issues/new/choose).
 </Callout>
 </div>

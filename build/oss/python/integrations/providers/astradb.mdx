@@ -98,7 +98,7 @@ See the [example provided by DataStax](https://docs.datastax.com/en/astra/astra-
 ## LLM cache
 
 ```python
-from langchain.globals import set_llm_cache
+from langchain_core.globals import set_llm_cache
 from langchain_astradb import AstraDBCache
 
 set_llm_cache(AstraDBCache(
@@ -110,7 +110,7 @@ set_llm_cache(AstraDBCache(
 ## Semantic LLM cache
 
 ```python
-from langchain.globals import set_llm_cache
+from langchain_core.globals import set_llm_cache
 from langchain_astradb import AstraDBSemanticCache
 
 set_llm_cache(AstraDBSemanticCache(
@@ -186,10 +186,10 @@ See the API reference for the [AstraDBByteStore](https://reference.langchain.com
 ---
 
 <div className="source-links">
-<Callout icon="edit">
-    [Edit this page on GitHub](https://github.com/langchain-ai/docs/edit/main/src/oss/python/integrations/providers/astradb.mdx) or [file an issue](https://github.com/langchain-ai/docs/issues/new/choose).
-</Callout>
 <Callout icon="terminal-2">
     [Connect these docs](/use-these-docs) to Claude, VSCode, and more via MCP for real-time answers.
+</Callout>
+<Callout icon="edit">
+    [Edit this page on GitHub](https://github.com/langchain-ai/docs/edit/main/src/oss/python/integrations/providers/astradb.mdx) or [file an issue](https://github.com/langchain-ai/docs/issues/new/choose).
 </Callout>
 </div>
