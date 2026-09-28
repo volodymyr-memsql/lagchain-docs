@@ -26333,9 +26333,9 @@
             "name": "limit",
             "in": "query",
             "schema": {
-              "maximum": 100,
-              "minimum": 1,
               "default": 20,
+              "minimum": 1,
+              "maximum": 100,
               "type": "integer",
               "title": "Limit"
             }
@@ -26345,8 +26345,8 @@
             "name": "offset",
             "in": "query",
             "schema": {
-              "minimum": 0,
               "default": 0,
+              "minimum": 0,
               "type": "integer",
               "title": "Offset"
             }
@@ -27716,11 +27716,11 @@
             "name": "direction",
             "in": "query",
             "schema": {
+              "default": "forward",
               "enum": [
                 "forward",
                 "backward"
               ],
-              "default": "forward",
               "type": "string",
               "title": "Direction"
             }
@@ -40140,9 +40140,9 @@
             "name": "page_size",
             "in": "query",
             "schema": {
-              "maximum": 100,
-              "minimum": 1,
               "default": 20,
+              "minimum": 1,
+              "maximum": 100,
               "type": "integer",
               "title": "Page Size"
             }
@@ -40152,11 +40152,11 @@
             "name": "granularity",
             "in": "query",
             "schema": {
+              "default": "HOUR",
               "enum": [
                 "HOUR",
                 "RESOURCE"
               ],
-              "default": "HOUR",
               "type": "string",
               "title": "Granularity"
             }
@@ -42014,9 +42014,9 @@
             "name": "page_size",
             "in": "query",
             "schema": {
-              "maximum": 100,
-              "minimum": 1,
               "default": 20,
+              "minimum": 1,
+              "maximum": 100,
               "type": "integer",
               "title": "Page Size"
             }
@@ -44495,9 +44495,9 @@
             "name": "limit",
             "in": "query",
             "schema": {
-              "maximum": 100,
-              "minimum": 1,
               "default": 50,
+              "minimum": 1,
+              "maximum": 100,
               "type": "integer",
               "title": "Limit"
             }
@@ -44506,8 +44506,8 @@
             "name": "offset",
             "in": "query",
             "schema": {
-              "minimum": 0,
               "default": 0,
+              "minimum": 0,
               "type": "integer",
               "title": "Offset"
             }
@@ -45471,9 +45471,9 @@
             "name": "page_size",
             "in": "query",
             "schema": {
-              "maximum": 100,
-              "minimum": 1,
               "default": 20,
+              "minimum": 1,
+              "maximum": 100,
               "type": "integer",
               "title": "Page Size"
             }
