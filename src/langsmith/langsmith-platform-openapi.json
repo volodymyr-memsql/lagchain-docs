@@ -11027,7 +11027,7 @@
           "feedback"
         ],
         "summary": "Create feedback",
-        "description": "Create a new feedback.\n\n`session_id` identifies the tracing project the feedback belongs to. It is\nrequired unless the feedback is addressed by `agent_id` and\n`agent_environment`, which name that project through an Agent environment\nthat already exists.",
+        "description": "Create a new feedback.\n\n`session_id` identifies the tracing project the feedback belongs to. It is\nrequired unless the feedback is addressed by `address`, or by `agent_id` and\n`agent_environment`, which name that project through an Agent environment\nthat already exists.",
         "operationId": "create_feedback_api_v1_feedback_post",
         "security": [
           {
@@ -22201,7 +22201,7 @@
           "me"
         ],
         "summary": "Update onboarding state field",
-        "description": "Update a specific onboarding completion field for the current user.\n\nValid fields:\n- tracing_completed_at\n- lgstudio_completed_at\n- playground_completed_at\n- evaluation_completed_at\n- success_viewed_at",
+        "description": "Update a specific onboarding completion field for the current user.\n\nValid fields:\n- tracing_completed_at\n- lgstudio_completed_at\n- playground_completed_at\n- evaluation_completed_at\n- success_viewed_at\n- agent_platform_welcome_viewed_at",
         "operationId": "update_onboarding_state_field_api_v1_me_onboarding_state__field__put",
         "security": [
           {
@@ -26346,9 +26346,9 @@
             "in": "query",
             "schema": {
               "type": "integer",
-              "maximum": 100,
               "minimum": 1,
               "default": 20,
+              "maximum": 100,
               "title": "Limit"
             }
           },
@@ -27729,11 +27729,11 @@
             "in": "query",
             "schema": {
               "type": "string",
+              "default": "forward",
               "enum": [
                 "forward",
                 "backward"
               ],
-              "default": "forward",
               "title": "Direction"
             }
           }
@@ -40230,9 +40230,9 @@
             "in": "query",
             "schema": {
               "type": "integer",
-              "maximum": 100,
               "minimum": 1,
               "default": 20,
+              "maximum": 100,
               "title": "Page Size"
             }
           },
@@ -40242,11 +40242,11 @@
             "in": "query",
             "schema": {
               "type": "string",
+              "default": "HOUR",
               "enum": [
                 "HOUR",
                 "RESOURCE"
               ],
-              "default": "HOUR",
               "title": "Granularity"
             }
           },
@@ -42104,9 +42104,9 @@
             "in": "query",
             "schema": {
               "type": "integer",
-              "maximum": 100,
               "minimum": 1,
               "default": 20,
+              "maximum": 100,
               "title": "Page Size"
             }
           },
@@ -44585,9 +44585,9 @@
             "in": "query",
             "schema": {
               "type": "integer",
-              "maximum": 100,
               "minimum": 1,
               "default": 50,
+              "maximum": 100,
               "title": "Limit"
             }
           },
@@ -45561,9 +45561,9 @@
             "in": "query",
             "schema": {
               "type": "integer",
-              "maximum": 100,
               "minimum": 1,
               "default": 20,
+              "maximum": 100,
               "title": "Page Size"
             }
           },
@@ -47850,6 +47850,7 @@
           "create_tagging",
           "delete_tagging",
           "create_agent",
+          "create_agent_environment",
           "update_agent",
           "delete_agent",
           "create_agent_runtime_binding",
@@ -47924,6 +47925,8 @@
           "attach_access_policies",
           "detach_access_policies",
           "read_role_access_policies",
+          "create_team",
+          "add_team_members",
           "create_scim_token",
           "update_scim_token",
           "delete_scim_token",
@@ -49590,6 +49593,11 @@
             "$ref": "#/components/schemas/BulkExportCompression",
             "default": "zstandard"
           },
+          "is_rollup_disabled": {
+            "type": "boolean",
+            "title": "Is Rollup Disabled",
+            "default": false
+          },
           "interval_hours": {
             "anyOf": [
               {
@@ -49749,6 +49757,11 @@
           "compression": {
             "$ref": "#/components/schemas/BulkExportCompression",
             "default": "zstandard"
+          },
+          "is_rollup_disabled": {
+            "type": "boolean",
+            "title": "Is Rollup Disabled",
+            "default": false
           },
           "interval_hours": {
             "anyOf": [
@@ -56659,7 +56672,7 @@
               }
             ],
             "title": "Agent Id",
-            "description": "Experimental. Only supported in workspaces where Agent addressing is enabled; other workspaces get a 403. The Agent's id, not a UUID: 1 to 63 lowercase ASCII letters, digits, or hyphens, starting with a letter and ending with a letter or digit (e.g. support-agent). Addresses the tracing project through an Agent instead of session_id. Sent together with agent_environment, and never alongside session_id. The Agent and the environment must already exist; sending feedback does not create them."
+            "description": "Beta. Only supported in workspaces where Agent addressing is enabled; other workspaces get a 403. The Agent's id, not a UUID: 1 to 63 lowercase ASCII letters, digits, or hyphens, starting with a letter and ending with a letter or digit (e.g. support-agent). Addresses the tracing project through an Agent instead of session_id. Sent together with agent_environment, and never alongside session_id. The Agent and the environment must already exist; sending feedback does not create them."
           },
           "agent_environment": {
             "anyOf": [
@@ -56677,7 +56690,15 @@
               }
             ],
             "title": "Agent Environment",
-            "description": "Experimental. Only supported in workspaces where Agent addressing is enabled; other workspaces get a 403. The Agent environment whose tracing project the feedback belongs to. Matched case-insensitively. Sent together with agent_id."
+            "description": "Beta. Only supported in workspaces where Agent addressing is enabled; other workspaces get a 403. The Agent environment whose tracing project the feedback belongs to. Matched case-insensitively. Sent together with agent_id."
+          },
+          "address": {
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/address.AgentAddress"
+              }
+            ],
+            "description": "Beta. Only supported in workspaces where Agent addressing is enabled; other workspaces get a 403. Addresses the tracing project through an Agent environment instead of session_id. Never combined with agent_id, agent_environment, or session_id. The Agent and the environment must already exist; sending feedback does not create them."
           },
           "trace_id": {
             "anyOf": [
@@ -62187,8 +62208,24 @@
             ],
             "title": "Display Name"
           },
+          "avatar_url": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Avatar Url"
+          },
           "config": {
             "$ref": "#/components/schemas/OrganizationConfig"
+          },
+          "topic_search_enabled": {
+            "type": "boolean",
+            "title": "Topic Search Enabled",
+            "default": false
           },
           "engine_enabled": {
             "anyOf": [
@@ -62525,6 +62562,17 @@
             "type": "string",
             "title": "Display Name"
           },
+          "avatar_url": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Avatar Url"
+          },
           "tier": {
             "anyOf": [
               {
@@ -62775,6 +62823,11 @@
               }
             ],
             "title": "Llm Auth Proxy Allowed Urls"
+          },
+          "topic_search_enabled": {
+            "type": "boolean",
+            "title": "Topic Search Enabled",
+            "default": false
           },
           "engine_enabled": {
             "anyOf": [
@@ -63047,6 +63100,11 @@
               }
             ],
             "title": "Llm Auth Proxy Allowed Urls"
+          },
+          "topic_search_enabled": {
+            "type": "boolean",
+            "title": "Topic Search Enabled",
+            "default": false
           },
           "engine_enabled": {
             "anyOf": [
@@ -76799,6 +76857,18 @@
             ],
             "title": "Success Viewed At"
           },
+          "agent_platform_welcome_viewed_at": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "date-time"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Agent Platform Welcome Viewed At"
+          },
           "created_at": {
             "type": "string",
             "format": "date-time",
@@ -77285,6 +77355,43 @@
         ],
         "title": "Tenant",
         "description": "Tenant schema."
+      },
+      "address.AgentAddress": {
+        "type": "object",
+        "required": [
+          "environment",
+          "id",
+          "kind"
+        ],
+        "properties": {
+          "environment": {
+            "description": "`environment` is the Agent environment.",
+            "type": "string",
+            "enum": [
+              "LOCAL",
+              "DEVELOPMENT",
+              "STAGING",
+              "PRODUCTION"
+            ],
+            "example": "PRODUCTION"
+          },
+          "id": {
+            "description": "`id` is the Agent's user-assigned id.",
+            "type": "string",
+            "maxLength": 63,
+            "minLength": 1,
+            "example": "support-agent",
+            "pattern": "^[a-z](?:[a-z0-9-]{0,61}[a-z0-9])?$"
+          },
+          "kind": {
+            "enum": [
+              "AGENT"
+            ],
+            "type": "string",
+            "x-stainless-const": true
+          }
+        },
+        "additionalProperties": false
       },
       "agent.CreateIssuesAgentRequest": {
         "type": "object",
@@ -81133,6 +81240,10 @@
           "customer_info": {
             "$ref": "#/components/schemas/info.CustomerInfo"
           },
+          "engine_github_web_base_url": {
+            "type": "string",
+            "format": "uri"
+          },
           "git_sha": {
             "type": "string"
           },
@@ -81362,6 +81473,17 @@
           },
           "fix_dispatched_at": {
             "type": "string"
+          },
+          "fix_handoff_bot_user_id": {
+            "description": "Non-nil once the issue is handed off to a coding agent; Engine skips its\nown fix run while it is set.",
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ]
           },
           "fix_pr_number": {
             "type": "integer"
@@ -82556,6 +82678,16 @@
           "api_key_creation_from_api_keys_enabled": {
             "type": "boolean"
           },
+          "avatar_url": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
           "byoc_create_saas_workspace_enabled": {
             "type": "boolean"
           },
@@ -82697,6 +82829,10 @@
           },
           "tier": {
             "type": "string"
+          },
+          "topic_search_enabled": {
+            "type": "boolean",
+            "default": false
           },
           "workspace_admin_can_invite_to_org": {
             "type": "boolean"
@@ -83799,8 +83935,16 @@
       "runs.Run": {
         "type": "object",
         "properties": {
+          "address": {
+            "description": "Beta. Addresses the run to an Agent environment in place of\nsession_id or session_name. Cannot be combined with agent_id or\nagent_environment. Only workspaces enabled for Agent addressing accept\nit; others get a 403.",
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/address.AgentAddress"
+              }
+            ]
+          },
           "agent_environment": {
-            "description": "Experimental. The Agent environment the run belongs to, case-insensitive;\nrequires agent_id. Only workspaces enabled for Agent addressing accept it;\nothers get a 403.",
+            "description": "Beta. The Agent environment the run belongs to, case-insensitive;\nrequires agent_id. Only workspaces enabled for Agent addressing accept it;\nothers get a 403.",
             "type": "string",
             "enum": [
               "LOCAL",
@@ -83810,7 +83954,7 @@
             ]
           },
           "agent_id": {
-            "description": "Experimental. Addresses the run to an Agent, with agent_environment, in\nplace of session_id or session_name. Only workspaces enabled for Agent\naddressing accept it; others get a 403.",
+            "description": "Beta, superseded by address. Addresses the run to an Agent, with\nagent_environment, in place of session_id or session_name. Only\nworkspaces enabled for Agent addressing accept it; others get a 403.",
             "type": "string"
           },
           "dotted_order": {
@@ -85070,6 +85214,13 @@
             "type": "array",
             "items": {
               "$ref": "#/components/schemas/sandboxes.ProxyHeader"
+            }
+          },
+          "match_headers": {
+            "description": "MatchHeaders restricts a header injection rule to requests carrying every listed header, each written \"name: value\" with a lowercase name and an exact value. Pair with headers of the same name to swap a placeholder the sandbox sends (e.g. \"authorization: Bearer account-b\") for a real credential, so one host can serve several accounts. Rules are evaluated in order and the first match wins.",
+            "type": "array",
+            "items": {
+              "type": "string"
             }
           },
           "match_hosts": {
@@ -87249,6 +87400,21 @@
             "description": "Keep empty Slack fields in the response. The frontend uses an explicit\nempty string to distinguish URL destinations from Slack destinations.",
             "type": "string"
           },
+          "slack_handoff": {
+            "description": "SlackHandoff is nil when no coding-agent hand-off is set on this destination.",
+            "anyOf": [
+              {
+                "allOf": [
+                  {
+                    "$ref": "#/components/schemas/webhooks.SlackHandoffResponse"
+                  }
+                ]
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
           "slack_team_id": {
             "type": "string"
           },
@@ -87370,6 +87536,17 @@
           "name": {
             "type": "string",
             "example": "Ada Lovelace"
+          }
+        }
+      },
+      "webhooks.SlackHandoffResponse": {
+        "type": "object",
+        "required": [
+          "bot_user_id"
+        ],
+        "properties": {
+          "bot_user_id": {
+            "type": "string"
           }
         }
       },
