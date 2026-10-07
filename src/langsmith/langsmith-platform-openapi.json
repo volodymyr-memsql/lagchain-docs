@@ -26345,8 +26345,8 @@
             "name": "limit",
             "in": "query",
             "schema": {
-              "minimum": 1,
               "maximum": 100,
+              "minimum": 1,
               "default": 20,
               "type": "integer",
               "title": "Limit"
@@ -30255,7 +30255,7 @@
         "x-public": true
       },
       "post": {
-        "description": "Creates a gateway policy for the calling organization.\n\n**policy_type** is one of `spend_cap`, `default_spend_cap`,\n`guard`, `route_config`, `model_fallback`, `rate_limit`, or `default_rate_limit`.\nThe shape of `config` depends on policy_type:\n- `spend_cap` / `default_spend_cap`, one limit:\n`{\"window\": \"hourly\"|\"daily\"|\"weekly\"|\"monthly\", \"limit_usd\": <number>}`\n- `spend_cap` / `default_spend_cap`, a limit per window:\n`{\"version\": 2, \"limits\": [{\"window\": \"hourly\"|\"daily\"|\"weekly\"|\"monthly\", \"limit_usd\": <number>}]}`\n- `guard`:\n`{\"version\": 1, \"detect\": {\"pii\": <bool>, \"secrets\": <bool>}, \"timeout_seconds\": <number>, \"timeout_action\": \"allow\"|\"block\"}`\n`timeout_seconds` (optional, 0.1–30) caps guard pipeline execution time; defaults to 2s. `timeout_action` defaults to `allow`.\n- `route_config`:\n`{\"strategy\": \"priority_fallback\", \"triggers\": {\"status_codes\": [<int>]}, \"fallbacks\": [{\"model_configs\": [{\"model_config_id\": \"<playground-settings-uuid>\"}]}]}`\n`triggers` is required, with no default: `status_codes` must be a non-empty list (include 502 and 504 for upstream transport failures). `fallbacks` contains an entry whose `model_configs` are tried in priority order (1–5). `subject_matchers` must be a single `workspace_id` entry.\n- `model_fallback`:\n`{\"strategy\": \"priority_fallback\", \"triggers\": {\"status_codes\": [429, 502, 503, 504]}, \"chain\": {\"selector\": {\"type\": \"provider_model\", \"provider\": \"openai\", \"model\": \"gpt-4o\"}, \"candidates\": [{\"type\": \"provider_model\", \"provider\": \"openai\", \"model\": \"gpt-4o-mini\"}, {\"type\": \"model_config\", \"model_config_id\": \"<playground-settings-uuid>\"}]}}`\n`chain.candidates` is an ordered list of 1–5 direct provider models or saved workspace model configurations. A non-empty `workspace_id` matcher is required. `provider_model` selectors are workspace-only; `alias` selectors may be narrowed by `user_id` or `api_key_id`. Provider/model selectors are unique within a workspace, while alias names are reserved across the organization and may intentionally shadow a model name.\n- `rate_limit` / `default_rate_limit`:\n`{\"version\": 1, \"limits\": [{\"metric\": \"requests\"|\"tokens\", \"window\": \"minute\"|\"hour\", \"value\": <integer>}]}`\n`limits` must be non-empty; each `metric`/`window` pair may appear at most once. `value` is 1..1000000000000000.\n\n**subject_matchers** is a list of `{key, value}` pairs. Built-in\nkeys are `organization_id`, `workspace_id`, `user_id`, `api_key_id`,\nand `run_rule_id`. Values under the same key are ORed; distinct keys\nare ANDed. A default policy uses an empty built-in matcher value so\nthe runtime materializes a child for each subject it sees. A\n`default_spend_cap` and `default_rate_limit` may add one empty custom\nmetadata key to bucket each subject by the corresponding\n`X-Gateway-*` request header; the materialized child stores both values.\n\n**action** is currently always `block`. Spend caps reject the\nrequest with 402 when the limit is hit; rate limits reject with\n429 (with a `Retry-After` hint) when a limit is exceeded; guard\npolicies redact matched content in-place before forwarding upstream.\n\n**Upsert by matchers:** for `spend_cap`, `default_spend_cap`,\n`rate_limit`, `default_rate_limit`, and `guard`, if a policy with\nthe same `subject_matchers` already exists in this organization,\nthe existing policy is updated in place instead of a duplicate\nbeing created. `id` is preserved. `route_config` and `model_fallback` do not upsert\nby matchers — name must be unique per organization (409 on\nconflict). Returns 201 either way.",
+        "description": "Creates a gateway policy for the calling organization.\n\n**policy_type** is one of `spend_cap`, `default_spend_cap`,\n`guard`, `route_config`, `model_fallback`, `rate_limit`, or `default_rate_limit`.\nThe shape of `config` depends on policy_type:\n- `spend_cap` / `default_spend_cap`, one limit:\n`{\"window\": \"hourly\"|\"daily\"|\"weekly\"|\"monthly\", \"limit_usd\": <number>}`\n- `spend_cap` / `default_spend_cap`, a limit per window:\n`{\"version\": 2, \"limits\": [{\"window\": \"hourly\"|\"daily\"|\"weekly\"|\"monthly\", \"limit_usd\": <number>}]}`\n- `guard`:\n`{\"version\": 1, \"detect\": {\"pii\": <bool>, \"secrets\": <bool>, \"custom\": [{\"pattern\": \"<regex>\"}]}, \"timeout_seconds\": <number>, \"timeout_action\": \"allow\"|\"block\"}`\n`timeout_seconds` (optional, 0.1–30) caps guard pipeline execution time; defaults to 2s. `timeout_action` defaults to `allow`.\n`detect.custom` (optional) holds at most one Go regexp (RE2 syntax) of up to 512 bytes; matching text is redacted. Avoid capture groups: if present, only the first group is redacted, wherever that text appears.\n- `route_config`:\n`{\"strategy\": \"priority_fallback\", \"triggers\": {\"status_codes\": [<int>]}, \"fallbacks\": [{\"model_configs\": [{\"model_config_id\": \"<playground-settings-uuid>\"}]}]}`\n`triggers` is required, with no default: `status_codes` must be a non-empty list (include 502 and 504 for upstream transport failures). `fallbacks` contains an entry whose `model_configs` are tried in priority order (1–5). `subject_matchers` must be a single `workspace_id` entry.\n- `model_fallback`:\n`{\"strategy\": \"priority_fallback\", \"triggers\": {\"status_codes\": [429, 502, 503, 504]}, \"chain\": {\"selector\": {\"type\": \"provider_model\", \"provider\": \"openai\", \"model\": \"gpt-4o\"}, \"candidates\": [{\"type\": \"provider_model\", \"provider\": \"openai\", \"model\": \"gpt-4o-mini\"}, {\"type\": \"model_config\", \"model_config_id\": \"<playground-settings-uuid>\"}]}}`\n`chain.candidates` is an ordered list of 1–5 direct provider models or saved workspace model configurations. A non-empty `workspace_id` matcher is required. `provider_model` selectors are workspace-only; `alias` selectors may be narrowed by `user_id` or `api_key_id`. Provider/model selectors are unique within a workspace, while alias names are reserved across the organization and may intentionally shadow a model name.\n- `rate_limit` / `default_rate_limit`:\n`{\"version\": 1, \"limits\": [{\"metric\": \"requests\"|\"tokens\", \"window\": \"minute\"|\"hour\", \"value\": <integer>}]}`\n`limits` must be non-empty; each `metric`/`window` pair may appear at most once. `value` is 1..1000000000000000.\n\n**subject_matchers** is a list of `{key, value}` pairs. Built-in\nkeys are `organization_id`, `workspace_id`, `user_id`, `api_key_id`,\nand `run_rule_id`. Values under the same key are ORed; distinct keys\nare ANDed. A default policy uses an empty built-in matcher value so\nthe runtime materializes a child for each subject it sees. A\n`default_spend_cap` and `default_rate_limit` may add one empty custom\nmetadata key to bucket each subject by the corresponding\n`X-Gateway-*` request header; the materialized child stores both values.\n\n**action** is currently always `block`. Spend caps reject the\nrequest with 402 when the limit is hit; rate limits reject with\n429 (with a `Retry-After` hint) when a limit is exceeded; guard\npolicies redact matched content in-place before forwarding upstream.\n\n**Upsert by matchers:** for `spend_cap`, `default_spend_cap`,\n`rate_limit`, `default_rate_limit`, and `guard`, if a policy with\nthe same `subject_matchers` already exists in this organization,\nthe existing policy is updated in place instead of a duplicate\nbeing created. `id` is preserved. `route_config` and `model_fallback` do not upsert\nby matchers — name must be unique per organization (409 on\nconflict). Returns 201 either way.",
         "tags": [
           "gateway-policies"
         ],
@@ -30345,7 +30345,7 @@
           {
             "label": "guard",
             "lang": "json",
-            "source": "{\n  \"name\": \"redact-pii\",\n  \"policy_type\": \"guard\",\n  \"action\": \"block\",\n  \"subject_matchers\": [{\"key\":\"organization_id\",\"value\":\"<org-uuid>\"}],\n  \"config\": {\"version\": 1, \"detect\": {\"pii\": true, \"secrets\": true}, \"timeout_seconds\": 3}\n}"
+            "source": "{\n  \"name\": \"redact-pii\",\n  \"policy_type\": \"guard\",\n  \"action\": \"block\",\n  \"subject_matchers\": [{\"key\":\"organization_id\",\"value\":\"<org-uuid>\"}],\n  \"config\": {\"version\": 1, \"detect\": {\"pii\": true, \"secrets\": true, \"custom\": [{\"pattern\": \"BLD-[A-Z]{3}-[0-9]{4}\"}]}, \"timeout_seconds\": 3}\n}"
           },
           {
             "label": "route_config",
@@ -40229,8 +40229,8 @@
             "name": "page_size",
             "in": "query",
             "schema": {
-              "minimum": 1,
               "maximum": 100,
+              "minimum": 1,
               "default": 20,
               "type": "integer",
               "title": "Page Size"
@@ -42103,8 +42103,8 @@
             "name": "page_size",
             "in": "query",
             "schema": {
-              "minimum": 1,
               "maximum": 100,
+              "minimum": 1,
               "default": 20,
               "type": "integer",
               "title": "Page Size"
@@ -44584,8 +44584,8 @@
             "name": "limit",
             "in": "query",
             "schema": {
-              "minimum": 1,
               "maximum": 100,
+              "minimum": 1,
               "default": 50,
               "type": "integer",
               "title": "Limit"
@@ -45560,8 +45560,8 @@
             "name": "page_size",
             "in": "query",
             "schema": {
-              "minimum": 1,
               "maximum": 100,
+              "minimum": 1,
               "default": 20,
               "type": "integer",
               "title": "Page Size"
@@ -48043,10 +48043,15 @@
           "read_role_access_policies",
           "read_team_access_policies",
           "create_team",
+          "update_team",
+          "delete_team",
           "add_team_members",
           "attach_team_access_policy",
           "detach_team_access_policy",
           "remove_team_member",
+          "create_team_workspace_grant",
+          "update_team_workspace_grant",
+          "delete_team_workspace_grant",
           "create_scim_token",
           "update_scim_token",
           "delete_scim_token",
@@ -61844,6 +61849,11 @@
             "title": "Can Use Audit Logs",
             "default": false
           },
+          "can_use_teams": {
+            "type": "boolean",
+            "title": "Can Use Teams",
+            "default": false
+          },
           "can_add_seats": {
             "type": "boolean",
             "title": "Can Add Seats",
@@ -73191,6 +73201,11 @@
             "format": "uuid",
             "title": "Provider Id"
           },
+          "provider_type": {
+            "$ref": "#/components/schemas/SSOProviderType",
+            "default": "saml",
+            "x-extensible-enum": true
+          },
           "default_workspace_role_id": {
             "type": "string",
             "format": "uuid",
@@ -73225,6 +73240,42 @@
               }
             ],
             "title": "Metadata Xml"
+          },
+          "oidc_issuer_url": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Oidc Issuer Url"
+          },
+          "oidc_client_id": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Oidc Client Id"
+          },
+          "oidc_scopes": {
+            "items": {
+              "type": "string"
+            },
+            "type": "array",
+            "title": "Oidc Scopes"
+          },
+          "oidc_claim_mapping": {
+            "additionalProperties": {
+              "type": "string"
+            },
+            "type": "object",
+            "title": "Oidc Claim Mapping"
           },
           "sso_groups_enabled": {
             "type": "boolean",
@@ -73302,6 +73353,14 @@
           "organization_display_name"
         ],
         "title": "SSOProviderSlim"
+      },
+      "SSOProviderType": {
+        "type": "string",
+        "enum": [
+          "saml",
+          "oidc"
+        ],
+        "title": "SSOProviderType"
       },
       "SSOSettingsCreate": {
         "properties": {
@@ -83771,6 +83830,17 @@
             "type": "integer",
             "example": 200
           },
+          "query_metadata": {
+            "description": "`query_metadata` describes this query result, including `sem_filter_score` when a semantic filter is used. Returned automatically by run queries, or null when unavailable.",
+            "anyOf": [
+              {
+                "type": "object"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
           "reference_dataset_id": {
             "description": "`reference_dataset_id` is the dataset UUID for the reference example, if any.",
             "type": "string",
@@ -83996,6 +84066,17 @@
       "query.Trace": {
         "type": "object",
         "properties": {
+          "query_metadata": {
+            "description": "`query_metadata` describes why this trace matched the query, including `sem_filter_score` when a semantic filter is used. Returned automatically, or null when unavailable.",
+            "anyOf": [
+              {
+                "type": "object"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
           "root_run": {
             "description": "`root_run` is the trace's root run. Which properties are populated is controlled by `selects` in the request.",
             "allOf": [
@@ -86972,6 +87053,17 @@
             "description": "`num_errored_turns` is the count of root traces in the thread (within the query window) whose status was an error.",
             "type": "integer",
             "example": 1
+          },
+          "query_metadata": {
+            "description": "`query_metadata` describes why this thread matched the query, including `sem_filter_score` when a semantic filter is used. Returned automatically, or null when unavailable.",
+            "anyOf": [
+              {
+                "type": "object"
+              },
+              {
+                "type": "null"
+              }
+            ]
           },
           "start_time": {
             "description": "`start_time` is a reference start time for this row (RFC3339 date-time), such as for sorting.",
